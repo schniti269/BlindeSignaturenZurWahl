@@ -1,72 +1,99 @@
-# Blind Signature Wahlsystem - Demo
+# Blinde Signaturen zur Wahl - Demo
 
-Eine Demonstrationsanwendung für ein Wahlsystem mit Blinden Signaturen für die Kurssprecherwahl an der DHBW Mannheim WWI 22 SEA.
+Dieses Projekt demonstriert die Verwendung von blinden Signaturen basierend auf dem Diffie-Hellman-Schlüsselaustausch, speziell für die Anwendung in einem Wahlsystem.
 
-## Überblick
+## Warnung
 
-Diese Demo zeigt, wie Blinde Signaturen für ein anonymes Wahlsystem eingesetzt werden können. Dabei werden kryptographische Prozesse Schritt für Schritt visualisiert und erklärt.
+**Dies ist nur eine Demonstration!** Die Implementierung ist nicht für reale Wahlen oder andere sicherheitskritische Anwendungen geeignet. Sie dient ausschließlich zu Bildungszwecken.
 
-### Funktionen
+## Konzept
 
-- **Anonyme Stimmabgabe**: Wähler können anonym abstimmen, während die Wahlbehörde die Wahlberechtigung überprüft
-- **Verifizierbarkeit**: Jede Stimme wird kryptographisch signiert und kann verifiziert werden
-- **Transparenz**: Alle kryptographischen Schritte werden im Browser ausgeführt und angezeigt
-- **Admin-Dashboard**: Wahlleiter können Wahlbeteiligung und Ergebnisse einsehen
+Blinde Signaturen ermöglichen es einem Signierer, ein Dokument zu signieren, ohne den Inhalt zu sehen. Im Kontext einer Wahl:
 
-## Voraussetzungen
+1. Der Wähler "blendet" seine Stimmabgabe mit einem Zufallsfaktor
+2. Der Wahlleiter signiert die geblendete Nachricht
+3. Der Wähler "entblendet" die Signatur, erhält damit eine gültige Signatur für seine ursprüngliche Stimme
+4. Die Stimme kann mit der Signatur abgegeben werden
 
-- Python 3.8 oder höher
-- Pip (Python-Paketmanager)
+Dies gewährleistet:
+- **Anonymität**: Der Wahlleiter weiß nicht, für wen der Wähler stimmt
+- **Nicht-Fälschbarkeit**: Nur berechtigte Wähler können gültige Stimmen abgeben
 
-## Installation
+## Implementierte Ansätze
 
-1. Abhängigkeiten installieren:
-   ```
-   pip install -r requirements.txt
-   ```
+Dieses Projekt enthält zwei unterschiedliche Implementierungen:
 
-## Starten der Anwendung
+1. **Modul-basiert**: `app/utils/crypto.py` - Funktionen für den kompletten Prozess
+2. **Klassen-basiert**: `app/blind_signature.py` - OOP-Ansatz mit der `BlindSignature`-Klasse
 
-1. Server starten:
-   ```
-   python -m app.main
-   ```
+## Demo ausführen
 
-2. Öffne im Browser die Adresse: `http://localhost:8000`
+```bash
+# Vollständige Demo mit Schritt-für-Schritt-Erklärung
+python demo_blind_signature.py
 
-## Technische Details
-
-### Blinde Signaturen
-
-Die Anwendung verwendet einen vereinfachten RSA-basierten Blind-Signature-Algorithmus:
-
-1. Der Wähler erstellt einen Stimmzettel
-2. Der Stimmzettel wird mit einem zufälligen Faktor "geblendet"
-3. Die Wahlbehörde signiert den geblendeten Stimmzettel, ohne seinen Inhalt zu kennen
-4. Der Wähler entfernt den Blendungsfaktor und erhält eine gültige Signatur
-5. Der Wähler gibt seinen Stimmzettel mit der Signatur anonym ab
-
-### Verzeichnisstruktur
-
-```
-/app
-  /static
-    /js          - Frontend JavaScript für Blinding und Verifizierung
-  /templates     - HTML-Vorlagen für die Benutzeroberfläche
-  /utils         - Hilfsfunktionen, z.B. für Kryptographie
-  main.py        - Hauptanwendung mit FastAPI-Routen
-/data            - Gespeicherte Wahldaten (generiert zur Laufzeit)
-requirements.txt - Python-Abhängigkeiten
+# Einfachere Demo mit der BlindSignature-Klasse
+python main.py
 ```
 
-### Sicherheitshinweise
+## Tests ausführen
 
-Diese Demo verwendet aus Demonstrationszwecken vereinfachte kryptographische Verfahren:
+```bash
+# Alle Tests
+python -m unittest test_crypto.py test_blind_signature.py
 
-- **Schlüssellänge**: Es werden kürzere RSA-Schlüssel verwendet als in einer Produktionsumgebung empfohlen
-- **Zufallsgenerator**: Es wird ein einfacherer Zufallsgenerator verwendet als in einer echten Anwendung
-- **Persistenz**: Die Daten werden in einfachen Dateien gespeichert, nicht in einer sicheren Datenbank
+# Nur Modul-Tests
+python -m unittest test_crypto.py
 
-## Vortrag: Ian Schnitzke - Blinde Signaturen zur Wahl
+# Nur Klassen-Tests
+python -m unittest test_blind_signature.py
+```
 
-Diese Demo ist Teil eines Vortrags über Blinde Signaturen und ihre Anwendung bei elektronischen Wahlen an der DHBW Mannheim im Kurs WWI 22 SEA. 
+## Mathematischer Hintergrund
+
+Die Implementierung basiert auf dem Diffie-Hellman-Schlüsselaustausch und verwendet folgende Schritte:
+
+1. **Systemparameter**: 
+   - Primzahl p und Generator g
+
+2. **Schlüsselgenerierung**:
+   - Signierer wählt geheimen Schlüssel x
+   - Öffentlicher Schlüssel y = g^x mod p
+
+3. **Blindsignatur-Protokoll**:
+   - Wähler generiert DH-Parameter a, A = g^a mod p
+   - Signierer generiert DH-Parameter b, B = g^b mod p
+   - Beide berechnen gemeinsamen Schlüssel K = g^(ab) mod p
+   - Wähler blendet Nachricht: M_blind = (M * K) mod p
+   - Signierer signiert: S_blind = (M_blind)^x mod p
+   - Wähler entblendet: S = S_blind * (K^x)^(-1) mod p
+
+4. **Verifikation**:
+   - Prüfen ob S = M^x mod p
+
+## Projektstruktur
+
+```
+├── app/
+│   ├── utils/
+│   │   └── crypto.py    # Funktionale Implementierung
+│   └── blind_signature.py  # OOP-Implementierung
+├── test_crypto.py       # Tests für crypto.py
+├── test_blind_signature.py # Tests für BlindSignature
+├── main.py              # Einfache Demo
+└── demo_blind_signature.py # Ausführliche Demo
+```
+
+## Einschränkungen
+
+Diese Demo hat folgende Einschränkungen:
+
+- Verwendet kleine Primzahlen (p < 10.000)
+- Enthält Approximationen bei der Entblendung
+- Bietet keine Schutzmaßnahmen gegen Replay-Angriffe
+- Implementiert keine Zero-Knowledge-Beweise
+- Verwendet keine ausreichende Anonymisierung
+
+## Lizenz
+
+Dieses Projekt ist nur für Bildungszwecke bestimmt. 
