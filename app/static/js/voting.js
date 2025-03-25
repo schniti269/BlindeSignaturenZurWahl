@@ -9,6 +9,7 @@ let unblindedSignature = null;
 let studentId = null;
 let clientId = null;
 let originalText = null;
+let isTestMode = false;
 
 // BigInt version of modular inverse
 function modInverseBigInt(a, m) {
@@ -119,15 +120,45 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Client ID:', clientId);
     
     setupEventListeners();
+    
+    // Add demo mode option
+    const demoCheckbox = document.createElement('div');
+    demoCheckbox.className = 'form-check mb-3';
+    demoCheckbox.innerHTML = `
+        <input class="form-check-input" type="checkbox" id="demo-mode">
+        <label class="form-check-label" for="demo-mode">
+            Demo-Modus (ohne Matrikelnummer)
+        </label>
+    `;
+    document.querySelector('#step1 .card-body').appendChild(demoCheckbox);
+    
+    document.getElementById('demo-mode').addEventListener('change', function() {
+        isTestMode = this.checked;
+        const studentIdField = document.getElementById('student-id');
+        if (isTestMode) {
+            studentIdField.value = 'test';
+            studentIdField.disabled = true;
+        } else {
+            studentIdField.value = '';
+            studentIdField.disabled = false;
+        }
+    });
 });
 
 function setupEventListeners() {
     // Step 1: Student ID
     document.getElementById('btn-step1').addEventListener('click', function() {
         studentId = document.getElementById('student-id').value.trim();
-        if (!studentId) {
-            alert('Bitte gib deine Matrikelnummer ein.');
+        
+        // Allow empty or "test" values in test mode
+        if (!studentId && !isTestMode) {
+            alert('Bitte gib deine Matrikelnummer ein oder aktiviere den Demo-Modus.');
             return;
+        }
+        
+        if (isTestMode) {
+            studentId = 'test';
+            console.log('Running in test mode');
         }
         
         // Move to step 2
@@ -245,6 +276,9 @@ function setupEventListeners() {
     
     // Step 4: Send to authority
     document.getElementById('btn-step4').addEventListener('click', function() {
+        // Reset previous errors
+        document.getElementById('auth-error').style.display = 'none';
+        
         // Send the blinded ballot to the authority
         fetch('/sign-ballot', {
             method: 'POST',
@@ -333,6 +367,9 @@ function setupEventListeners() {
     
     // Step 6: Submit vote
     document.getElementById('btn-step6').addEventListener('click', function() {
+        // Reset previous errors
+        document.getElementById('vote-error').style.display = 'none';
+        
         // Submit the vote
         fetch('/submit-vote', {
             method: 'POST',

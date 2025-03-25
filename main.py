@@ -1,5 +1,8 @@
 from app.blind_signature import BlindSignature
 
+# Export the BlindSignature class
+BlindSignature = BlindSignature
+
 if __name__ == "__main__":
     # Simple demo of the blind signature voting process
     blind_sig = BlindSignature()
