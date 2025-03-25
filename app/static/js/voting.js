@@ -9,7 +9,6 @@ let unblindedSignature = null;
 let studentId = null;
 let clientId = null;
 let originalText = null;
-let isTestMode = false;
 
 // BigInt version of modular inverse
 function modInverseBigInt(a, m) {
@@ -120,29 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Client ID:', clientId);
     
     setupEventListeners();
-    
-    // Add demo mode option
-    const demoCheckbox = document.createElement('div');
-    demoCheckbox.className = 'form-check mb-3';
-    demoCheckbox.innerHTML = `
-        <input class="form-check-input" type="checkbox" id="demo-mode">
-        <label class="form-check-label" for="demo-mode">
-            Demo-Modus (ohne Matrikelnummer)
-        </label>
-    `;
-    document.querySelector('#step1 .card-body').appendChild(demoCheckbox);
-    
-    document.getElementById('demo-mode').addEventListener('change', function() {
-        isTestMode = this.checked;
-        const studentIdField = document.getElementById('student-id');
-        if (isTestMode) {
-            studentIdField.value = 'test';
-            studentIdField.disabled = true;
-        } else {
-            studentIdField.value = '';
-            studentIdField.disabled = false;
-        }
-    });
 });
 
 function setupEventListeners() {
@@ -150,15 +126,9 @@ function setupEventListeners() {
     document.getElementById('btn-step1').addEventListener('click', function() {
         studentId = document.getElementById('student-id').value.trim();
         
-        // Allow empty or "test" values in test mode
-        if (!studentId && !isTestMode) {
-            alert('Bitte gib deine Matrikelnummer ein oder aktiviere den Demo-Modus.');
+        if (!studentId) {
+            alert('Bitte gib deine Matrikelnummer ein.');
             return;
-        }
-        
-        if (isTestMode) {
-            studentId = 'test';
-            console.log('Running in test mode');
         }
         
         // Move to step 2

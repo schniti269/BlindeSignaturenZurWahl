@@ -75,10 +75,6 @@ async def dh_exchange(request: Request):
         # Store server's shared key for this client
         dh_sessions[client_id] = {"K": server_params["K"]}
 
-        print(
-            f"DH exchange: client_id={client_id}, A={A_int}, B={server_params['B']}, K={server_params['K']}"
-        )
-
         # Return B to client
         return {"B": str(server_params["B"])}
     except (ValueError, TypeError) as e:
@@ -94,8 +90,6 @@ async def sign_ballot(request: Request):
     blinded_ballot = data.get("blinded_ballot")
     client_id = data.get("client_id")
 
-    print(f"Sign ballot request: student_id={student_id}, client_id={client_id}")
-
     # Check if student is in the list and hasn't voted
     students = []
     voted_students = []
@@ -106,50 +100,33 @@ async def sign_ballot(request: Request):
         try:
             with open("data/students.csv", "r", encoding="utf-8") as f:
                 students = [line.strip() for line in f.readlines() if line.strip()]
-            print(f"Loaded {len(students)} students from file (UTF-8)")
         except UnicodeDecodeError:
             # If UTF-8 fails, try with UTF-16
             with open("data/students.csv", "r", encoding="utf-16") as f:
                 students = [line.strip() for line in f.readlines() if line.strip()]
-            print(f"Loaded {len(students)} students from file (UTF-16)")
 
         # Clean up any remaining null characters or BOM markers
         students = [s.replace("\x00", "").replace("\ufeff", "") for s in students if s]
         students = [s for s in students if s]  # Remove any empty strings after cleaning
-
-        print(f"Final student list: {students}")
     except FileNotFoundError:
         # Create sample file if doesn't exist
         with open("data/students.csv", "w", encoding="utf-8") as f:
             f.write("student1\nstudent2\nstudent3\nstudent4\nstudent5")
         students = ["student1", "student2", "student3", "student4", "student5"]
-        print("Created new students.csv file with 5 sample students")
 
     # Load voted students
     try:
         with open("data/voted.csv", "r", encoding="utf-8") as f:
             voted_students = [line.strip() for line in f.readlines() if line.strip()]
-        print(f"Loaded {len(voted_students)} voted students from file")
     except FileNotFoundError:
         # Create file if doesn't exist
         with open("data/voted.csv", "w", encoding="utf-8") as f:
             pass
-        print("Created new empty voted.csv file")
 
-    # Debug output for student verification
-    print(f"Available students: {students}")
-    print(f"Students who voted: {voted_students}")
-    print(f"Checking if {student_id} is authorized to vote...")
-
-    # For demo: If student_id is empty or "test", allow it for testing
-    if not student_id or student_id.lower() == "test":
-        print("Using test student ID - bypassing authorization check")
-        student_id = "test_student"
-    elif student_id not in students:
-        print(f"Student {student_id} not in list - unauthorized")
+    # For student verification
+    if student_id not in students:
         return JSONResponse(status_code=403, content={"error": "Student not in list"})
     elif student_id in voted_students:
-        print(f"Student {student_id} has already voted")
         return JSONResponse(
             status_code=403, content={"error": "Student has already voted"}
         )
@@ -158,7 +135,6 @@ async def sign_ballot(request: Request):
     try:
         blinded_ballot_int = int(blinded_ballot)
     except (ValueError, TypeError):
-        print(f"Invalid blinded ballot format: {blinded_ballot}")
         return JSONResponse(
             status_code=400, content={"error": "Invalid blinded ballot format"}
         )
@@ -166,13 +142,9 @@ async def sign_ballot(request: Request):
     # Sign blinded ballot
     blind_signature = sign_blinded_message(blinded_ballot_int, keys["private_key"])
 
-    print(f"Signed ballot: {blinded_ballot_int} → {blind_signature}")
-
     # Mark student as voted
-    if student_id != "test_student":  # Don't mark test students
-        with open("data/voted.csv", "a") as f:
-            f.write(f"{student_id}\n")
-        print(f"Marked student {student_id} as voted")
+    with open("data/voted.csv", "a") as f:
+        f.write(f"{student_id}\n")
 
     return {"blind_signature": str(blind_signature)}
 
@@ -183,11 +155,6 @@ async def submit_vote(request: Request):
     vote = data.get("vote")
     signature = data.get("signature")
     candidate = data.get("candidate", "Unbekannt")  # Kandidatenname für Anzeige
-
-    # Display debug info
-    print(f"RECEIVED VOTE RAW: {vote}")
-    print(f"SIGNATURE: {signature}")
-    print(f"CANDIDATE NAME: {candidate}")
 
     # Convert signature to integer if it's a string
     try:
@@ -206,14 +173,7 @@ async def submit_vote(request: Request):
         )
 
     # Verify signature
-    print(f"Verifying: vote={vote_int}, signature={signature_int}")
     if not verify_signature(vote_int, signature_int, keys["public_key"]):
-        # For additional debugging
-        print(f"VERIFICATION DETAILS:")
-        print(f"  Last 2 digits of vote: {vote_int % 100}")
-        print(f"  Last 2 digits of signature: {signature_int % 100}")
-
-        print(f"Verification failed: {vote_int} with signature {signature_int}")
         return JSONResponse(status_code=403, content={"error": "Invalid signature"})
 
     # Check if this ballot has been cast before
@@ -237,7 +197,6 @@ async def submit_vote(request: Request):
     with open("data/votes.json", "w") as f:
         json.dump(cast_votes, f)
 
-    print(f"Vote successfully cast for: {candidate_name}")
     return {"success": True}
 
 
@@ -270,22 +229,15 @@ async def get_results():
                 students_count = sum(1 for line in f if line.strip())
     except FileNotFoundError:
         students_count = 0
-        print("Warning: students.csv file not found")
 
     try:
         with open("data/voted.csv", "r", encoding="utf-8") as f:
             voted_count = sum(1 for line in f if line.strip())
     except FileNotFoundError:
         voted_count = 0
-        print("Warning: voted.csv file not found")
 
     # Calculate participation percentage, ensure it's a number
     participation = (voted_count / students_count) * 100 if students_count > 0 else 0
-
-    # Debugging output to help diagnose issues
-    print(
-        f"DEBUG get_results: votes={votes}, students_count={students_count}, voted_count={voted_count}, participation={participation}"
-    )
 
     return {
         "votes": votes,

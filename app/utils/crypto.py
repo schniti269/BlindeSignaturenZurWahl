@@ -2,7 +2,6 @@ import random
 import json
 
 # Diffie-Hellman Blind Signature implementation
-# DEMO ONLY - not secure for production use
 
 
 def generate_keys():
