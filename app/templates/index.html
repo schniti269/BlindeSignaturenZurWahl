@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blind Signature Wahlsystem</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            padding-top: 2rem;
+        }
+        .jumbotron {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .logo {
+            max-width: 100px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="jumbotron text-center">
+            <h1 class="display-4">Kurssprecherwahl WWI 22 SEA</h1>
+            <p class="lead">Demonstration eines Wahlsystems mit Blinden Signaturen</p>
+            <hr class="my-4">
+            <p>Blind Signatures erlauben es, Nachrichten zu signieren, ohne ihren Inhalt zu kennen - ideal für anonyme Wahlen.</p>
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Für Wähler</h5>
+                            <p class="card-text">Als Wähler kannst du hier deine Stimme abgeben. Der Prozess läuft in mehreren Schritten ab, um deine Anonymität zu wahren.</p>
+                            <a href="/vote" class="btn btn-primary">Zur Wahlseite</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Für Wahlleiter</h5>
+                            <p class="card-text">Als Wahlleiter kannst du hier die Wahlbeteiligung und Ergebnisse einsehen.</p>
+                            <a href="/admin" class="btn btn-secondary">Zum Admin-Bereich</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            <h3>Was sind Blinde Signaturen?</h3>
+            <p>
+                Blinde Signaturen wurden 1982 von David Chaum entwickelt und ermöglichen es einer Partei (Wahlbehörde), 
+                ein Dokument zu signieren, ohne den Inhalt zu kennen. Die Signatur kann später vom Empfänger 
+                "entblendet" werden, um eine gültige Signatur für das Original-Dokument zu erhalten.
+            </p>
+            
+            <h4>Der Ablauf dieser Demo:</h4>
+            <ol>
+                <li>Der Wähler erstellt einen Stimmzettel mit seiner Wahl</li>
+                <li>Der Stimmzettel wird mit einem zufälligen Faktor geblendet</li>
+                <li>Der geblendete Stimmzettel wird zur Wahlbehörde gesendet</li>
+                <li>Die Wahlbehörde überprüft die Wahlberechtigung und signiert den geblendeten Stimmzettel</li>
+                <li>Der Wähler entfernt den Blendungsfaktor und erhält eine gültige Signatur</li>
+                <li>Der Wähler sendet seinen Stimmzettel mit der Signatur anonym an die Wahlurne</li>
+                <li>Die Wahlurne überprüft die Signatur und zählt die Stimme</li>
+            </ol>
+            
+            <p class="text-muted text-center mt-5">
+                Vortrag: Ian Schnitzke - Blinde Signaturen zur Wahl<br>
+                DHBW Mannheim - WWI 22 SEA
+            </p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
