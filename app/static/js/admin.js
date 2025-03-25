@@ -1,9 +1,15 @@
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("Page loaded, initializing...");
     setupEventListeners();
-    // Initial load of data
-    fetchResults();
-    fetchVotedStudents(); // Load voted students immediately
+    
+    // Delay initial load slightly to ensure DOM is fully ready
+    setTimeout(() => {
+        // Initial load of data
+        console.log("Loading initial data...");
+        fetchResults();
+        fetchVotedStudents();
+    }, 100);
 });
 
 function setupEventListeners() {
@@ -67,15 +73,38 @@ function processResultsData(data, targetId) {
     const now = new Date();
     const currentTime = now.toLocaleTimeString();
 
+    // Debug output to help diagnose issues
+    console.log("Processing data for", targetId, data);
+
     if (targetId === 'participation-results') {
         // Render participation results
         let template = document.getElementById('participation-template').innerHTML;
-        template = template.replace(/{{participation}}/g, data.participation);
-        template = template.replace(/{{voted_students}}/g, data.voted_students);
-        template = template.replace(/{{total_students}}/g, data.total_students);
+        
+        // Ensure participation is properly formatted
+        const participation = parseFloat(data.participation) || 0;
+        const votedStudents = parseInt(data.voted_students) || 0;
+        const totalStudents = parseInt(data.total_students) || 0;
+        
+        console.log("Participation values:", {
+            participation,
+            votedStudents,
+            totalStudents,
+            currentTime
+        });
+        
+        template = template.replace(/{{participation}}/g, participation.toFixed(1));
+        template = template.replace(/{{voted_students}}/g, votedStudents);
+        template = template.replace(/{{total_students}}/g, totalStudents);
         template = template.replace(/{{currentTime}}/g, currentTime);
         
         targetElement.innerHTML = template;
+        
+        // Also directly set the values in case the templating fails
+        const progressBar = targetElement.querySelector('.progress-bar');
+        if (progressBar) {
+            progressBar.style.width = participation + '%';
+            progressBar.textContent = participation.toFixed(1) + '%';
+        }
     }
     
     if (targetId === 'voting-results') {

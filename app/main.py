@@ -260,18 +260,32 @@ async def get_results():
     voted_count = 0
 
     try:
-        with open("data/students.csv", "r") as f:
-            students_count = sum(1 for line in f if line.strip())
+        # First try with UTF-8 encoding (most common)
+        try:
+            with open("data/students.csv", "r", encoding="utf-8") as f:
+                students_count = sum(1 for line in f if line.strip())
+        except UnicodeDecodeError:
+            # If UTF-8 fails, try with UTF-16
+            with open("data/students.csv", "r", encoding="utf-16") as f:
+                students_count = sum(1 for line in f if line.strip())
     except FileNotFoundError:
-        pass
+        students_count = 0
+        print("Warning: students.csv file not found")
 
     try:
-        with open("data/voted.csv", "r") as f:
+        with open("data/voted.csv", "r", encoding="utf-8") as f:
             voted_count = sum(1 for line in f if line.strip())
     except FileNotFoundError:
-        pass
+        voted_count = 0
+        print("Warning: voted.csv file not found")
 
+    # Calculate participation percentage, ensure it's a number
     participation = (voted_count / students_count) * 100 if students_count > 0 else 0
+
+    # Debugging output to help diagnose issues
+    print(
+        f"DEBUG get_results: votes={votes}, students_count={students_count}, voted_count={voted_count}, participation={participation}"
+    )
 
     return {
         "votes": votes,

@@ -145,9 +145,9 @@
             <div class="card-body">
                 <h5 class="card-title">Wahlbeteiligung</h5>
                 <div class="progress mb-3">
-                    <div class="progress-bar" role="progressbar" style="width: {{participation}}%">{{participation}}%</div>
+                    <div class="progress-bar" role="progressbar" aria-valuenow="{{participation}}" aria-valuemin="0" aria-valuemax="100" style="width: {{participation}}%">{{participation}}%</div>
                 </div>
-                <p>{{voted_students}} von {{total_students}} Studenten haben abgestimmt.</p>
+                <p class="mb-2"><strong>{{voted_students}}</strong> von <strong>{{total_students}}</strong> Studenten haben abgestimmt.</p>
                 <div class="text-muted small">Letzte Aktualisierung: <span id="last-update-time">{{currentTime}}</span></div>
             </div>
         </div>
