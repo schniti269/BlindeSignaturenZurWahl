@@ -6,7 +6,12 @@ import os
 import csv
 import json
 from pathlib import Path
-from app.utils.crypto import generate_keys, sign_blinded_message, verify_signature
+from app.utils.crypto import (
+    generate_keys,
+    sign_blinded_message,
+    verify_signature,
+    generate_server_dh_params,
+)
 
 app = FastAPI(title="Blind Signature Voting Demo")
 
@@ -27,6 +32,9 @@ if not keys_file.exists():
 # Load keys
 with open(keys_file, "r") as f:
     keys = json.load(f)
+
+# Store for DH session parameters
+dh_sessions = {}
 
 
 # Routes
@@ -50,11 +58,41 @@ async def get_public_key():
     return {"public_key": keys["public_key"]}
 
 
+@app.post("/dh-exchange")
+async def dh_exchange(request: Request):
+    """Handle the DH key exchange protocol"""
+    data = await request.json()
+    client_id = data.get("client_id")
+    client_A = data.get("A")
+
+    try:
+        # Convert A to integer
+        A_int = int(client_A)
+
+        # Generate server's DH parameters
+        server_params = generate_server_dh_params(A_int, keys["public_key"])
+
+        # Store server's shared key for this client
+        dh_sessions[client_id] = {"K": server_params["K"]}
+
+        print(
+            f"DH exchange: client_id={client_id}, A={A_int}, B={server_params['B']}, K={server_params['K']}"
+        )
+
+        # Return B to client
+        return {"B": str(server_params["B"])}
+    except (ValueError, TypeError) as e:
+        return JSONResponse(
+            status_code=400, content={"error": f"Invalid DH parameters: {str(e)}"}
+        )
+
+
 @app.post("/sign-ballot")
 async def sign_ballot(request: Request):
     data = await request.json()
     student_id = data.get("student_id")
     blinded_ballot = data.get("blinded_ballot")
+    client_id = data.get("client_id")
 
     # Check if student is in the list and hasn't voted
     students = []
@@ -99,6 +137,8 @@ async def sign_ballot(request: Request):
     # Sign blinded ballot
     blind_signature = sign_blinded_message(blinded_ballot_int, keys["private_key"])
 
+    print(f"Signed ballot: {blinded_ballot_int} → {blind_signature}")
+
     # Mark student as voted
     with open("data/voted.csv", "a") as f:
         f.write(f"{student_id}\n")
@@ -111,10 +151,12 @@ async def submit_vote(request: Request):
     data = await request.json()
     vote = data.get("vote")
     signature = data.get("signature")
+    candidate = data.get("candidate", "Unbekannt")  # Kandidatenname für Anzeige
 
     # Display debug info
-    print(f"RECEIVED VOTE: {vote}")
+    print(f"RECEIVED VOTE RAW: {vote}")
     print(f"SIGNATURE: {signature}")
+    print(f"CANDIDATE NAME: {candidate}")
 
     # Convert signature to integer if it's a string
     try:
@@ -135,6 +177,11 @@ async def submit_vote(request: Request):
     # Verify signature
     print(f"Verifying: vote={vote_int}, signature={signature_int}")
     if not verify_signature(vote_int, signature_int, keys["public_key"]):
+        # For additional debugging
+        print(f"VERIFICATION DETAILS:")
+        print(f"  Last 2 digits of vote: {vote_int % 100}")
+        print(f"  Last 2 digits of signature: {signature_int % 100}")
+
         print(f"Verification failed: {vote_int} with signature {signature_int}")
         return JSONResponse(status_code=403, content={"error": "Invalid signature"})
 
@@ -151,23 +198,15 @@ async def submit_vote(request: Request):
         if cast_vote["signature"] == signature:
             return JSONResponse(status_code=403, content={"error": "Vote already cast"})
 
-    # Map numeric vote back to candidate text
-    # This is just for display purposes in the results
-    if vote_int > 0:  # This is a simplistic mapping
-        if vote_int % 3 == 0:
-            candidate_name = "Kandidat A"
-        elif vote_int % 3 == 1:
-            candidate_name = "Kandidat B"
-        else:
-            candidate_name = "Kandidat C"
-    else:
-        candidate_name = "Ungültige Stimme"
+    # Use the provided candidate name instead of mapping
+    candidate_name = candidate
 
     # Store vote
     cast_votes.append({"vote": candidate_name, "signature": signature})
     with open("data/votes.json", "w") as f:
         json.dump(cast_votes, f)
 
+    print(f"Vote successfully cast for: {candidate_name}")
     return {"success": True}
 
 

@@ -1,11 +1,14 @@
 // Global variables to store state
 let publicKey = null;
-let blinder = null;
-let blindingFactor = null;
+let dhParams = null;
+let sharedKey = null;
+let blindedBallot = null;
 let originalBallot = null;
 let blindSignature = null;
 let unblindedSignature = null;
 let studentId = null;
+let clientId = null;
+let originalText = null;
 
 // BigInt version of modular inverse
 function modInverseBigInt(a, m) {
@@ -104,8 +107,17 @@ function modPow(base, exponent, modulus) {
     return result;
 }
 
+// Generate a random client ID
+function generateClientId() {
+    return 'client_' + Math.random().toString(36).substring(2, 15);
+}
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
+    // Generate a unique client ID for this session
+    clientId = generateClientId();
+    console.log('Client ID:', clientId);
+    
     setupEventListeners();
 });
 
@@ -126,6 +138,9 @@ function setupEventListeners() {
     document.getElementById('ballot-choice').addEventListener('change', function() {
         const choice = this.value;
         if (choice) {
+            // Speichere sowohl den Originaltext als auch den numerischen Wert
+            originalText = choice;
+            
             // Convert choice to an integer for cryptographic operations
             originalBallot = stringToInt(choice).toString();
             document.getElementById('raw-ballot').value = originalBallot;
@@ -157,41 +172,74 @@ function setupEventListeners() {
         });
     });
     
-    // Step 3: Blind the ballot
+    // Step 3: Generate DH parameters and blind the ballot
     document.getElementById('btn-step3').addEventListener('click', function() {
-        // Blind the ballot
-        const n = BigInt(publicKey.n);
-        const e = BigInt(publicKey.e);
-        
-        // Generate random blinding factor
-        let r;
-        do {
-            // Use a simpler random number for demo purposes
-            r = BigInt(Math.floor(Math.random() * 1000000) + 100000);
-        } while (gcd(Number(r), Number(n)) !== 1);
-        
-        blindingFactor = r;
-        
-        // Calculate r^e mod n
-        const r_e = modPow(r, e, n);
-        
-        // Blind the message: (message * r^e) mod n
-        const message = BigInt(originalBallot);
-        const blindedMessage = (message * r_e) % n;
-        
-        // Display the results
-        document.getElementById('blinding-factor').textContent = blindingFactor.toString();
-        document.getElementById('blinded-ballot').textContent = blindedMessage.toString();
-        blinder = blindedMessage.toString();
-        
-        // Show next button
-        document.getElementById('btn-step3').style.display = 'none';
-        document.getElementById('btn-step3-next').style.display = 'inline-block';
+        try {
+            // Generate DH parameters
+            const p = BigInt(publicKey.p);
+            const g = BigInt(publicKey.g);
+            
+            // Generate random 'a' for DH
+            const a = BigInt(Math.floor(Math.random() * 1000) + 100);
+            
+            // Calculate A = g^a mod p
+            const A = modPow(g, a, p);
+            
+            dhParams = {
+                a: a,
+                A: A
+            };
+            
+            document.getElementById('blinding-factor').textContent = "DH parameter a: " + a.toString();
+            
+            // Send A to server and get B
+            fetch('/dh-exchange', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    client_id: clientId,
+                    A: A.toString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Calculate shared key K = B^a mod p
+                const B = BigInt(data.B);
+                sharedKey = modPow(B, dhParams.a, p);
+                
+                // Speichere sharedKey explizit als String für spätere Konvertierung
+                sharedKey = sharedKey.toString();
+                
+                // Blind the ballot: M_blind = (M * K) mod p
+                const message = BigInt(originalBallot);
+                const sharedKey_bigint = BigInt(sharedKey);
+                blindedBallot = (message * sharedKey_bigint) % p;
+                
+                // Display the results
+                document.getElementById('blinded-ballot').textContent = 
+                    "B: " + B.toString() + "\n" +
+                    "Shared Key K: " + sharedKey + "\n" +
+                    "Blinded Ballot: " + blindedBallot.toString();
+                
+                // Show next button
+                document.getElementById('btn-step3').style.display = 'none';
+                document.getElementById('btn-step3-next').style.display = 'inline-block';
+            })
+            .catch(error => {
+                console.error('Error in DH exchange:', error);
+                alert('Fehler beim Diffie-Hellman-Schlüsselaustausch.');
+            });
+        } catch (error) {
+            console.error('Error blinding ballot:', error);
+            alert('Fehler beim Blenden des Stimmzettels: ' + error.message);
+        }
     });
     
     document.getElementById('btn-step3-next').addEventListener('click', function() {
         // Move to step 4
-        document.getElementById('blinded-ballot-to-auth').textContent = blinder;
+        document.getElementById('blinded-ballot-to-auth').textContent = blindedBallot.toString();
         moveToStep(4);
     });
     
@@ -205,7 +253,8 @@ function setupEventListeners() {
             },
             body: JSON.stringify({
                 student_id: studentId,
-                blinded_ballot: blinder
+                client_id: clientId,
+                blinded_ballot: blindedBallot.toString()
             })
         })
         .then(response => {
@@ -239,22 +288,27 @@ function setupEventListeners() {
     
     // Step 5: Unblind signature
     document.getElementById('btn-step5').addEventListener('click', function() {
-        // Unblind the signature
         try {
-            const n = BigInt(publicKey.n);
+            // Unblind the signature
+            const p = BigInt(publicKey.p);
             const blindSig = BigInt(blindSignature);
-            const r = BigInt(blindingFactor);
             
-            // Calculate r^-1 mod n using BigInt version
-            const r_inv = modInverseBigInt(r, n);
+            // Stellen sicher, dass sharedKey ein BigInt ist
+            const sharedKey_bigint = typeof sharedKey === 'bigint' ? sharedKey : BigInt(sharedKey);
             
-            if (r_inv === null) {
-                alert('Fehler bei der Berechnung des multiplikativen Inversen. Die Zahlen sind möglicherweise nicht teilerfremd.');
-                return;
-            }
+            // Calculate inverse of shared key K^-1 mod p
+            // Note: This is a simplification. In a real implementation, we'd need K^x
+            // Nutze BigInt Literal 2n statt Number 2
+            const K_inv = modPow(sharedKey_bigint, p - 2n, p); // Fermat's little theorem
             
-            // Unblind: (blindSig * r_inv) mod n
-            const unblinded = (blindSig * r_inv) % n;
+            // Debugging-Ausgaben
+            console.log('p:', p);
+            console.log('blindSig:', blindSig);
+            console.log('sharedKey:', sharedKey_bigint);
+            console.log('K_inv:', K_inv);
+            
+            // Unblind: S = S_blind * K^-1 mod p
+            const unblinded = (blindSig * K_inv) % p;
             unblindedSignature = unblinded.toString();
             
             // Display the unblinded signature
@@ -287,7 +341,8 @@ function setupEventListeners() {
             },
             body: JSON.stringify({
                 vote: originalBallot,
-                signature: unblindedSignature
+                signature: unblindedSignature,
+                candidate: originalText // Sende den lesbaren Kandidatennamen für die Anzeige
             })
         })
         .then(response => {
