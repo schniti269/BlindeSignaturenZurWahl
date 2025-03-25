@@ -96,4 +96,41 @@ Diese Demo hat folgende Einschränkungen:
 
 ## Lizenz
 
-Dieses Projekt ist nur für Bildungszwecke bestimmt. 
+Dieses Projekt ist nur für Bildungszwecke bestimmt.
+
+## Docker Usage
+
+### Running with Docker
+
+Build and run the application using Docker:
+
+```bash
+# Build the Docker image
+docker build -t blind-signature-demo .
+
+# Run the container
+docker run -p 8000:8000 -v ./data:/app/data blind-signature-demo
+```
+
+### Running with Docker Compose
+
+```bash
+# Build and start the application
+docker-compose up -d
+
+# Stop the application
+docker-compose down
+```
+
+### Pushing to Docker Hub
+
+```bash
+# Log in to Docker Hub
+docker login
+
+# Tag the image
+docker tag blind-signature-demo YOUR-USERNAME/blind-signature-demo:latest
+
+# Push to Docker Hub
+docker push YOUR-USERNAME/blind-signature-demo:latest
+``` 
