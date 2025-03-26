@@ -1,7 +1,11 @@
 # Blinde Signaturen zur Wahl - Demo
-<img width="996" alt="image" src="https://github.com/user-attachments/assets/a9f2226b-a8e5-4b46-8340-0a94e8859c6e" />
+Simples UI für Wahlprozess
+<img width="996" alt="image" src="https://github.com/user-attachments/assets/a9f2226b-a8e5-4b46-8340-0a94e8859c6e" 
+Nutzer kann zu bildungszwecken den gesamten vorgang clientside uns derverside sehen und schritt fürschritt den prozess verstehen
 <img width="679" alt="image" src="https://github.com/user-attachments/assets/98b52289-0a41-45f1-9e27-34813420ac74" />
+Wahlleiter dashboard mit live ergebnissen
 <img width="1046" alt="image" src="https://github.com/user-attachments/assets/a902d074-eb00-47c2-b60f-47107c53b433" />
+eigenschaften des wahlsystems
 <img width="998" alt="image" src="https://github.com/user-attachments/assets/e9e535a7-3caa-42c4-9415-520500914ae3" />
 
 Ein Demonstrationsprojekt für Blind Signatures (blinde Signaturen) in einem elektronischen Wahlsystem.
