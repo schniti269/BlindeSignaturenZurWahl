@@ -6,75 +6,210 @@
     <title>Blind Signature Wahlsystem</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <!-- Add FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            padding-top: 2rem;
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #f72585;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
+            padding-top: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         .jumbotron {
             background-color: #fff;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 15px;
+            padding: 2.5rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
         }
+        
         .logo {
             max-width: 100px;
             margin-bottom: 1rem;
+        }
+        
+        .card {
+            margin-bottom: 1.5rem;
+            border-radius: 15px;
+            border: none;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+        }
+        
+        /* Style buttons */
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.35);
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(90deg, var(--accent-color) 0%, #b5179e 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(247, 37, 133, 0.25);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(247, 37, 133, 0.35);
+            background: linear-gradient(90deg, #b5179e 0%, var(--accent-color) 100%);
+        }
+        
+        /* Feature items */
+        .feature-item {
+            padding: 1rem;
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .feature-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .display-4 {
+            font-weight: 700;
+            color: var(--primary-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="jumbotron text-center">
+        <div class="jumbotron text-center animate__animated animate__fadeIn">
             <h1 class="display-4">Kurssprecherwahl WWI 22 SEA</h1>
             <p class="lead">Demonstration eines Wahlsystems mit Blinden Signaturen</p>
             <hr class="my-4">
             <p>Blind Signatures erlauben es, Nachrichten zu signieren, ohne ihren Inhalt zu kennen - ideal für anonyme Wahlen.</p>
             <div class="row mt-5">
-                <div class="col-md-6">
-                    <div class="card mb-4">
+                <div class="col-md-6 animate__animated animate__fadeInLeft" style="animation-delay: 0.2s;">
+                    <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Für Wähler</h5>
+                            <h5 class="card-title"><i class="fas fa-vote-yea"></i>Für Wähler</h5>
                             <p class="card-text">Als Wähler kannst du hier deine Stimme abgeben. Der Prozess läuft in mehreren Schritten ab, um deine Anonymität zu wahren.</p>
-                            <a href="/vote" class="btn btn-primary">Zur Wahlseite</a>
+                            <a href="/vote" class="btn btn-primary"><i class="fas fa-clipboard-check me-2"></i>Zur Wahlseite</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card mb-4">
+                <div class="col-md-6 animate__animated animate__fadeInRight" style="animation-delay: 0.4s;">
+                    <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Für Wahlleiter</h5>
+                            <h5 class="card-title"><i class="fas fa-chart-line"></i>Für Wahlleiter</h5>
                             <p class="card-text">Als Wahlleiter kannst du hier die Wahlbeteiligung und Ergebnisse einsehen.</p>
-                            <a href="/admin" class="btn btn-secondary">Zum Admin-Bereich</a>
+                            <a href="/admin" class="btn btn-secondary"><i class="fas fa-chart-bar me-2"></i>Zum Admin-Bereich</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="mt-5">
-            <h3>Was sind Blinde Signaturen?</h3>
-            <p>
-                Blinde Signaturen wurden 1982 von David Chaum entwickelt und ermöglichen es einer Partei (Wahlbehörde), 
-                ein Dokument zu signieren, ohne den Inhalt zu kennen. Die Signatur kann später vom Empfänger 
-                "entblendet" werden, um eine gültige Signatur für das Original-Dokument zu erhalten.
-            </p>
+        <div class="mt-5 animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">
+            <div class="card">
+                <div class="card-body">
+                    <h3><i class="fas fa-question-circle me-2" style="color: var(--primary-color);"></i>Was sind Blinde Signaturen?</h3>
+                    <p>
+                        Blinde Signaturen wurden 1982 von David Chaum entwickelt und ermöglichen es einer Partei (Wahlbehörde), 
+                        ein Dokument zu signieren, ohne den Inhalt zu kennen. Die Signatur kann später vom Empfänger 
+                        "entblendet" werden, um eine gültige Signatur für das Original-Dokument zu erhalten.
+                    </p>
+                    
+                    <h4 class="mt-4"><i class="fas fa-tasks me-2" style="color: var(--accent-color);"></i>Der Ablauf dieser Demo:</h4>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">1</span>Stimmzettel erstellen</h5>
+                                <p class="mb-0">Der Wähler erstellt einen Stimmzettel mit seiner Wahl</p>
+                            </div>
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">2</span>Stimmzettel blenden</h5>
+                                <p class="mb-0">Der Stimmzettel wird mit einem zufälligen Faktor geblendet</p>
+                            </div>
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">3</span>Zur Wahlbehörde senden</h5>
+                                <p class="mb-0">Der geblendete Stimmzettel wird zur Wahlbehörde gesendet</p>
+                            </div>
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">4</span>Berechtigung prüfen</h5>
+                                <p class="mb-0">Die Wahlbehörde überprüft die Wahlberechtigung</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">5</span>Signatur erhalten</h5>
+                                <p class="mb-0">Der Wähler entfernt den Blendungsfaktor und erhält eine gültige Signatur</p>
+                            </div>
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">6</span>Anonyme Stimmabgabe</h5>
+                                <p class="mb-0">Der Wähler sendet seinen Stimmzettel mit der Signatur anonym an die Wahlurne</p>
+                            </div>
+                            <div class="feature-item">
+                                <h5><span class="badge rounded-pill bg-primary me-2">7</span>Gültigkeit prüfen</h5>
+                                <p class="mb-0">Die Wahlurne überprüft die Signatur und zählt die Stimme</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <h4>Der Ablauf dieser Demo:</h4>
-            <ol>
-                <li>Der Wähler erstellt einen Stimmzettel mit seiner Wahl</li>
-                <li>Der Stimmzettel wird mit einem zufälligen Faktor geblendet</li>
-                <li>Der geblendete Stimmzettel wird zur Wahlbehörde gesendet</li>
-                <li>Die Wahlbehörde überprüft die Wahlberechtigung und signiert den geblendeten Stimmzettel</li>
-                <li>Der Wähler entfernt den Blendungsfaktor und erhält eine gültige Signatur</li>
-                <li>Der Wähler sendet seinen Stimmzettel mit der Signatur anonym an die Wahlurne</li>
-                <li>Die Wahlurne überprüft die Signatur und zählt die Stimme</li>
-            </ol>
-            
-            <p class="text-muted text-center mt-5">
-                Vortrag: Ian Schnitzke - Blinde Signaturen zur Wahl<br>
-                DHBW Mannheim - WWI 22 SEA
-            </p>
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        Vortrag: Ian Schnitzke - Blinde Signaturen zur Wahl<br>
+                        DHBW Mannheim - WWI 22 SEA
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
     

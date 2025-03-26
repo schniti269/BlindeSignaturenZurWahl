@@ -6,47 +6,288 @@
     <title>Stimmabgabe - Blind Signature</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <!-- Add FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #f72585;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
         body {
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
             padding-top: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .card {
-            margin-bottom: 1rem;
-            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-        }
-        .card-header {
-            font-weight: bold;
-        }
-        pre {
-            background-color: #f8f9fa;
+        
+        .voting-header {
+            margin-bottom: 2rem;
             padding: 1rem;
-            border-radius: 0.25rem;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .card {
+            margin-bottom: 1.5rem;
+            border-radius: 15px;
+            border: none;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 2px solid #f3f4f6;
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header i {
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        pre {
+            background-color: var(--light-bg);
+            padding: 1rem;
+            border-radius: 10px;
             font-size: 0.8rem;
             overflow-x: auto;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         }
+        
         .step-inactive {
-            opacity: 0.5;
+            opacity: 0.7;
+            filter: grayscale(50%);
+            transition: all 0.3s ease;
         }
+        
         .step-active {
-            border: 2px solid #007bff;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 8px 30px rgba(67, 97, 238, 0.2);
+            transition: all 0.3s ease;
         }
+        
         .step-completed {
-            border-left: 5px solid #28a745;
+            border-left: 5px solid var(--success-color);
+            transition: all 0.3s ease;
+        }
+        
+        /* Style buttons */
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.35);
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(90deg, #2dc653 0%, #1a9741 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(29, 151, 65, 0.25);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(29, 151, 65, 0.35);
+            background: linear-gradient(90deg, #1a9741 0%, #2dc653 100%);
+        }
+        
+        .btn-link {
+            font-weight: 500;
+            color: var(--primary-color);
+            transition: all 0.3s;
+        }
+        
+        .btn-link:hover {
+            transform: translateY(-2px);
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.15);
+            border-color: var(--primary-color);
+        }
+        
+        .alert {
+            border-radius: 10px;
+            padding: 1rem;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .alert-success {
+            background-color: rgba(45, 198, 83, 0.15);
+            color: #1a9741;
+        }
+        
+        .alert-danger {
+            background-color: rgba(247, 37, 133, 0.15);
+            color: #b5179e;
+        }
+        
+        /* Progress indicator */
+        .progress-indicator {
+            display: flex;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem 0;
+            position: relative;
+        }
+        
+        .progress-step::after {
+            content: '';
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background-color: #e9ecef;
+            top: 1.5rem;
+            left: 50%;
+            z-index: 1;
+        }
+        
+        .progress-step:last-child::after {
+            display: none;
+        }
+        
+        .step-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            border: 2px solid #e9ecef;
+            z-index: 2;
+            position: relative;
+            transition: all 0.3s;
+            color: #ced4da;
+        }
+        
+        .step-active .step-icon {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .step-completed .step-icon {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+        
+        .step-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6c757d;
+        }
+        
+        .step-active .step-text {
+            color: var(--primary-color);
+        }
+        
+        .step-completed .step-text {
+            color: var(--success-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="mb-4">Stimmabgabe mit Blinden Signaturen</h1>
-        <p>Folge den Schritten, um deine Stimme sicher und anonym abzugeben.</p>
+        <div class="voting-header d-flex justify-content-between align-items-center animate__animated animate__fadeIn">
+            <div>
+                <h1 class="mb-0"><i class="fas fa-vote-yea me-2" style="color: var(--primary-color);"></i>Stimmabgabe</h1>
+                <p class="text-muted mb-0">mit Blinden Signaturen für maximale Anonymität</p>
+            </div>
+            <a href="/" class="btn btn-outline-secondary"><i class="fas fa-home me-2"></i>Zurück zur Startseite</a>
+        </div>
+        
+        <!-- Progress indicator -->
+        <div class="progress-indicator animate__animated animate__fadeInDown">
+            <div class="progress-step" id="progress-step1">
+                <div class="step-icon step-active"><i class="fas fa-user"></i></div>
+                <div class="step-text">Identifikation</div>
+            </div>
+            <div class="progress-step" id="progress-step2">
+                <div class="step-icon"><i class="fas fa-pen"></i></div>
+                <div class="step-text">Stimmzettel</div>
+            </div>
+            <div class="progress-step" id="progress-step3">
+                <div class="step-icon"><i class="fas fa-eye-slash"></i></div>
+                <div class="step-text">Blenden</div>
+            </div>
+            <div class="progress-step" id="progress-step4">
+                <div class="step-icon"><i class="fas fa-signature"></i></div>
+                <div class="step-text">Signieren</div>
+            </div>
+            <div class="progress-step" id="progress-step5">
+                <div class="step-icon"><i class="fas fa-unlock"></i></div>
+                <div class="step-text">Entblenden</div>
+            </div>
+            <div class="progress-step" id="progress-step6">
+                <div class="step-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="step-text">Stimmabgabe</div>
+            </div>
+        </div>
         
         <div class="row">
             <div class="col-md-8">
                 <!-- Step 1: Enter student ID -->
-                <div id="step1" class="card step-active">
+                <div id="step1" class="card step-active animate__animated animate__fadeInLeft">
                     <div class="card-header">
-                        Schritt 1: Identifikation
+                        <i class="fas fa-user"></i>Schritt 1: Identifikation
                     </div>
                     <div class="card-body">
                         <p>Gib deinen Vornamen ein, um deine Wahlberechtigung zu überprüfen.</p>
@@ -54,14 +295,14 @@
                             <label for="student-id" class="form-label">Vorname:</label>
                             <input type="text" class="form-control" id="student-id" placeholder="kleingeschrieben">
                         </div>
-                        <button class="btn btn-primary" id="btn-step1">Weiter</button>
+                        <button class="btn btn-primary" id="btn-step1"><i class="fas fa-arrow-right me-2"></i>Weiter</button>
                     </div>
                 </div>
                 
                 <!-- Step 2: Create ballot -->
-                <div id="step2" class="card step-inactive">
+                <div id="step2" class="card step-inactive animate__animated animate__fadeInLeft" style="animation-delay: 0.1s;">
                     <div class="card-header">
-                        Schritt 2: Stimmzettel erstellen
+                        <i class="fas fa-pen"></i>Schritt 2: Stimmzettel erstellen
                     </div>
                     <div class="card-body">
                         <p>Wähle den Kandidaten, für den du abstimmen möchtest.</p>
@@ -77,21 +318,21 @@
                             <label for="raw-ballot" class="form-label">Dein Stimmzettel (als Zahl):</label>
                             <input type="text" class="form-control" id="raw-ballot" readonly>
                         </div>
-                        <button class="btn btn-primary" id="btn-step2">Weiter</button>
+                        <button class="btn btn-primary" id="btn-step2"><i class="fas fa-arrow-right me-2"></i>Weiter</button>
                     </div>
                 </div>
                 
                 <!-- Step 3: Blind the ballot -->
-                <div id="step3" class="card step-inactive">
+                <div id="step3" class="card step-inactive animate__animated animate__fadeInLeft" style="animation-delay: 0.2s;">
                     <div class="card-header">
-                        Schritt 3: Stimmzettel blenden
+                        <i class="fas fa-eye-slash"></i>Schritt 3: Stimmzettel blenden
                     </div>
                     <div class="card-body">
                         <p>Blende deinen Stimmzettel mit einem zufälligen Faktor, bevor du ihn zur Wahlbehörde sendest.</p>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Public Key der Wahlbehörde:</label>
+                                    <label class="form-label"><i class="fas fa-key me-2" style="color: var(--secondary-color);"></i>Public Key der Wahlbehörde:</label>
                                     <pre id="auth-public-key"></pre>
                                 </div>
                             </div>
@@ -99,112 +340,145 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Blinding-Faktor (r):</label>
+                                    <label class="form-label"><i class="fas fa-random me-2" style="color: var(--accent-color);"></i>Blinding-Faktor (r):</label>
                                     <pre id="blinding-factor"></pre>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Geblendeter Stimmzettel:</label>
+                                    <label class="form-label"><i class="fas fa-mask me-2" style="color: var(--success-color);"></i>Geblendeter Stimmzettel:</label>
                                     <pre id="blinded-ballot"></pre>
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-primary" id="btn-step3">Stimmzettel blenden</button>
-                        <button class="btn btn-success" id="btn-step3-next" style="display: none;">Weiter</button>
+                        <button class="btn btn-primary" id="btn-step3"><i class="fas fa-eye-slash me-2"></i>Stimmzettel blenden</button>
+                        <button class="btn btn-success" id="btn-step3-next" style="display: none;"><i class="fas fa-arrow-right me-2"></i>Weiter</button>
                     </div>
                 </div>
                 
                 <!-- Step 4: Send to authority -->
-                <div id="step4" class="card step-inactive">
+                <div id="step4" class="card step-inactive animate__animated animate__fadeInLeft" style="animation-delay: 0.3s;">
                     <div class="card-header">
-                        Schritt 4: Signierung durch Wahlbehörde
+                        <i class="fas fa-signature"></i>Schritt 4: Signierung durch Wahlbehörde
                     </div>
                     <div class="card-body">
                         <p>Sende deinen geblendeten Stimmzettel zur Wahlbehörde zur Signierung.</p>
                         <div class="mb-3">
-                            <label class="form-label">Geblendeter Stimmzettel:</label>
+                            <label class="form-label"><i class="fas fa-file-alt me-2" style="color: var(--primary-color);"></i>Geblendeter Stimmzettel:</label>
                             <pre id="blinded-ballot-to-auth"></pre>
                         </div>
                         <div class="mb-3" id="blind-signature-container" style="display: none;">
-                            <label class="form-label">Blinde Signatur von der Wahlbehörde:</label>
+                            <label class="form-label"><i class="fas fa-signature me-2" style="color: var(--secondary-color);"></i>Blinde Signatur von der Wahlbehörde:</label>
                             <pre id="blind-signature"></pre>
                         </div>
                         <div class="alert alert-danger" id="auth-error" style="display: none;"></div>
-                        <button class="btn btn-primary" id="btn-step4">Zur Signierung senden</button>
-                        <button class="btn btn-success" id="btn-step4-next" style="display: none;">Weiter</button>
+                        <button class="btn btn-primary" id="btn-step4"><i class="fas fa-paper-plane me-2"></i>Zur Signierung senden</button>
+                        <button class="btn btn-success" id="btn-step4-next" style="display: none;"><i class="fas fa-arrow-right me-2"></i>Weiter</button>
                     </div>
                 </div>
                 
                 <!-- Step 5: Unblind signature -->
-                <div id="step5" class="card step-inactive">
+                <div id="step5" class="card step-inactive animate__animated animate__fadeInLeft" style="animation-delay: 0.4s;">
                     <div class="card-header">
-                        Schritt 5: Signatur entblenden
+                        <i class="fas fa-unlock"></i>Schritt 5: Signatur entblenden
                     </div>
                     <div class="card-body">
                         <p>Entferne den Blinding-Faktor von der Signatur, um eine gültige Signatur für deinen Stimmzettel zu erhalten.</p>
                         <div class="mb-3">
-                            <label class="form-label">Blinde Signatur:</label>
+                            <label class="form-label"><i class="fas fa-signature me-2" style="color: var(--primary-color);"></i>Blinde Signatur:</label>
                             <pre id="blind-sig-to-unblind"></pre>
                         </div>
                         <div class="mb-3" id="unblinded-signature-container" style="display: none;">
-                            <label class="form-label">Entblendete Signatur:</label>
+                            <label class="form-label"><i class="fas fa-check-double me-2" style="color: var(--success-color);"></i>Entblendete Signatur:</label>
                             <pre id="unblinded-signature"></pre>
                         </div>
-                        <button class="btn btn-primary" id="btn-step5">Signatur entblenden</button>
-                        <button class="btn btn-success" id="btn-step5-next" style="display: none;">Weiter</button>
+                        <button class="btn btn-primary" id="btn-step5"><i class="fas fa-unlock me-2"></i>Signatur entblenden</button>
+                        <button class="btn btn-success" id="btn-step5-next" style="display: none;"><i class="fas fa-arrow-right me-2"></i>Weiter</button>
                     </div>
                 </div>
                 
                 <!-- Step 6: Submit vote -->
-                <div id="step6" class="card step-inactive">
+                <div id="step6" class="card step-inactive animate__animated animate__fadeInLeft" style="animation-delay: 0.5s;">
                     <div class="card-header">
-                        Schritt 6: Stimmabgabe
+                        <i class="fas fa-paper-plane"></i>Schritt 6: Stimmabgabe
                     </div>
                     <div class="card-body">
                         <p>Gib deinen Stimmzettel anonym ab. Die Wahlbehörde kann die Gültigkeit deiner Stimme überprüfen, ohne zu wissen, wer du bist.</p>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Dein Stimmzettel:</label>
+                                    <label class="form-label"><i class="fas fa-vote-yea me-2" style="color: var(--primary-color);"></i>Dein Stimmzettel:</label>
                                     <pre id="final-ballot"></pre>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Deine Signatur:</label>
+                                    <label class="form-label"><i class="fas fa-signature me-2" style="color: var(--secondary-color);"></i>Deine Signatur:</label>
                                     <pre id="final-signature"></pre>
                                 </div>
                             </div>
                         </div>
                         <div class="alert alert-success" id="vote-success" style="display: none;">
-                            Deine Stimme wurde erfolgreich abgegeben!
+                            <i class="fas fa-check-circle me-2"></i>Deine Stimme wurde erfolgreich abgegeben!
                         </div>
                         <div class="alert alert-danger" id="vote-error" style="display: none;"></div>
-                        <button class="btn btn-primary" id="btn-step6">Stimme abgeben</button>
-                        <a href="/" class="btn btn-link" id="btn-finish" style="display: none;">Zurück zur Startseite</a>
+                        <button class="btn btn-primary" id="btn-step6"><i class="fas fa-paper-plane me-2"></i>Stimme abgeben</button>
+                        <a href="/" class="btn btn-link" id="btn-finish" style="display: none;"><i class="fas fa-home me-2"></i>Zurück zur Startseite</a>
                     </div>
                 </div>
             </div>
             
             <div class="col-md-4">
-                <div class="card">
+                <div class="card animate__animated animate__fadeInRight">
                     <div class="card-header">
-                        Blind Signature Demo
+                        <i class="fas fa-info-circle"></i>Blind Signature Demo
                     </div>
                     <div class="card-body">
-                        <h5>Wie funktioniert es?</h5>
-                        <ol>
-                            <li>Du erstellst einen Stimmzettel</li>
-                            <li>Du "blindest" ihn mit einem zufälligen Faktor</li>
-                            <li>Die Wahlbehörde signiert den geblendeten Stimmzettel</li>
-                            <li>Du entfernst den Blinding-Faktor</li>
-                            <li>Du erhältst eine gültige Signatur für deinen Stimmzettel</li>
-                            <li>Du gibst deinen Stimmzettel anonym ab</li>
-                        </ol>
-                        <p class="text-muted">
-                            <small>Diese Demo verwendet RSA für Blinde Signaturen. Alle kryptographischen Schritte werden im Browser ausgeführt, damit du den Prozess nachvollziehen kannst.</small>
-                        </p>
+                        <h5><i class="fas fa-question-circle me-2" style="color: var(--primary-color);"></i>Wie funktioniert es?</h5>
+                        <div class="mt-3">
+                            <div class="feature-item">
+                                <h6><span class="badge rounded-pill bg-primary me-2">1</span>Stimmzettel</h6>
+                                <p class="mb-0 small">Du erstellst einen Stimmzettel</p>
+                            </div>
+                            <div class="feature-item">
+                                <h6><span class="badge rounded-pill bg-primary me-2">2</span>Blindfaktor</h6>
+                                <p class="mb-0 small">Du "blindest" ihn mit einem zufälligen Faktor</p>
+                            </div>
+                            <div class="feature-item">
+                                <h6><span class="badge rounded-pill bg-primary me-2">3</span>Signierung</h6>
+                                <p class="mb-0 small">Die Wahlbehörde signiert den geblendeten Stimmzettel</p>
+                            </div>
+                            <div class="feature-item">
+                                <h6><span class="badge rounded-pill bg-primary me-2">4</span>Entblenden</h6>
+                                <p class="mb-0 small">Du entfernst den Blinding-Faktor</p>
+                            </div>
+                            <div class="feature-item">
+                                <h6><span class="badge rounded-pill bg-primary me-2">5</span>Signatur</h6>
+                                <p class="mb-0 small">Du erhältst eine gültige Signatur für deinen Stimmzettel</p>
+                            </div>
+                            <div class="feature-item">
+                                <h6><span class="badge rounded-pill bg-primary me-2">6</span>Abgabe</h6>
+                                <p class="mb-0 small">Du gibst deinen Stimmzettel anonym ab</p>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-4" style="background-color: rgba(76, 201, 240, 0.15); border: none;">
+                            <i class="fas fa-lock me-2"></i>
+                            <span class="small">Diese Demo verwendet RSA für Blinde Signaturen. Alle kryptographischen Schritte werden im Browser ausgeführt, damit du den Prozess nachvollziehen kannst.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3 animate__animated animate__fadeInRight" style="animation-delay: 0.3s;">
+                    <div class="card-header">
+                        <i class="fas fa-shield-alt"></i>Sicherheit
+                    </div>
+                    <div class="card-body">
+                        <p class="small">Die Verwendung von blinden Signaturen gewährleistet:</p>
+                        <ul class="small">
+                            <li><strong>Anonymität:</strong> Niemand kann deinen Stimmzettel mit deiner Identität verknüpfen</li>
+                            <li><strong>Integrität:</strong> Nur autorisierte Stimmen werden gezählt</li>
+                            <li><strong>Einmaligkeit:</strong> Mehrfachabstimmungen sind nicht möglich</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -213,5 +487,59 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/voting.js"></script>
+    
+    <script>
+        // Update progress steps based on active step
+        function updateProgressSteps(activeStep) {
+            // Reset all steps
+            for (let i = 1; i <= 6; i++) {
+                const progressStep = document.getElementById(`progress-step${i}`);
+                if (progressStep) {
+                    const icon = progressStep.querySelector('.step-icon');
+                    icon.classList.remove('step-active', 'step-completed');
+                }
+            }
+            
+            // Mark completed steps
+            for (let i = 1; i < activeStep; i++) {
+                const progressStep = document.getElementById(`progress-step${i}`);
+                if (progressStep) {
+                    const icon = progressStep.querySelector('.step-icon');
+                    icon.classList.add('step-completed');
+                    icon.innerHTML = '<i class="fas fa-check"></i>';
+                }
+            }
+            
+            // Mark active step
+            const activeProgressStep = document.getElementById(`progress-step${activeStep}`);
+            if (activeProgressStep) {
+                const icon = activeProgressStep.querySelector('.step-icon');
+                icon.classList.add('step-active');
+            }
+        }
+        
+        // Hook into existing step buttons to update progress
+        document.addEventListener('DOMContentLoaded', function() {
+            const stepButtons = [
+                document.getElementById('btn-step1'),
+                document.getElementById('btn-step2'),
+                document.getElementById('btn-step3-next'),
+                document.getElementById('btn-step4-next'),
+                document.getElementById('btn-step5-next'),
+                document.getElementById('btn-step6')
+            ];
+            
+            stepButtons.forEach((btn, index) => {
+                if (btn) {
+                    const originalClick = btn.onclick;
+                    btn.onclick = function(e) {
+                        if (originalClick) originalClick.call(this, e);
+                        // Update progress after small delay to allow for step transition
+                        setTimeout(() => updateProgressSteps(index + 2), 300);
+                    };
+                }
+            });
+        });
+    </script>
 </body>
 </html> 
