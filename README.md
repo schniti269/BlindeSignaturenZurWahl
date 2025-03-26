@@ -88,8 +88,8 @@ Die Anwendung verwendet eine `.env`-Datei für Umgebungsvariablen:
 
 ```
 COURSE_NAME="DHBW WWI22SEA"
-VOTING_STUDENTS="valentin,ian,jared,samuel,svenja,marian,monika"
-CANDIDATES="valentin,joel"
+VOTING_STUDENTS="x,y,z"
+CANDIDATES="a,b,c"
 ```
 
 ### Parameter
@@ -131,18 +131,6 @@ Dies gewährleistet:
 * **Anonymität**: Der Wahlleiter weiß nicht, für wen der Wähler stimmt
 * **Nicht-Fälschbarkeit**: Nur berechtigte Wähler können gültige Stimmen abgeben
 
-## 🧪 Tests ausführen
-
-```powershell
-# Alle Tests
-python -m unittest test_crypto.py test_blind_signature.py
-
-# Nur Modul-Tests
-python -m unittest test_crypto.py
-
-# Nur Klassen-Tests
-python -m unittest test_blind_signature.py
-```
 
 ## 🐳 Docker-Nutzung
 
@@ -165,28 +153,6 @@ docker-compose up -d
 # Anwendung stoppen
 docker-compose down
 ```
-
-### Nach Docker Hub pushen
-
-```powershell
-# Bei Docker Hub anmelden
-docker login
-
-# Image taggen
-docker tag blindewahl ianschn/blindewahl:latest
-
-# Nach Docker Hub pushen
-docker push ianschn/blindewahl:latest
-```
-
-## 🛠️ Fehlerbehebung
-
-| Problem | Lösung |
-|---------|--------|
-| Port bereits belegt | Port in `docker-compose.yml` ändern oder `-p 8001:8000` im Docker-Run-Befehl verwenden |
-| Daten persistieren | Datenverzeichnis mounten: `-v ./data:/app/data` |
-| Fehler beim Starten | Log-Ausgabe überprüfen: `docker logs [container-id]` |
-
 ## ⚠️ Einschränkungen und Warnungen
 
 **Dieses Projekt ist nur für Bildungszwecke konzipiert und nicht für reale Wahlen geeignet!**
