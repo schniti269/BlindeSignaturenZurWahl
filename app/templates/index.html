@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blind Signature Wahlsystem</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.5"></script>
@@ -10,8 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Add animate.css for animations -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <!-- Add QRCode.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Add QR Code library -->
+    <script src="/static/js/lib/qrcode.min.js"></script>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -125,32 +125,35 @@
             color: var(--primary-color);
         }
         
-        .qr-code-container {
-            text-align: center;
-            margin: 2rem auto;
+        /* QR Code container */
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem auto;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
             max-width: 200px;
         }
         
-        .qr-code-img {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: var(--card-shadow);
-            padding: 10px;
-            background: white;
+        .qr-code {
+            margin-bottom: 0.5rem;
         }
         
-        @media (max-width: 768px) {
-            body {
-                padding-top: 1rem;
-            }
-            
+        .qr-text {
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--dark-bg);
+            word-break: break-all;
+        }
+        
+        /* Mobile responsiveness improvements */
+        @media (max-width: 576px) {
             .jumbotron {
                 padding: 1.5rem;
-            }
-            
-            .feature-item {
-                padding: 0.75rem;
             }
             
             .card-body {
@@ -167,16 +170,10 @@
             <hr class="my-4">
             <p>Blind Signatures erlauben es, Nachrichten zu signieren, ohne ihren Inhalt zu kennen - ideal für anonyme Wahlen.</p>
             
-            <!-- QR Code -->
-            <div class="qr-code-container animate__animated animate__fadeIn">
-                <h5><i class="fas fa-qrcode me-2" style="color: var(--primary-color);"></i>Scan me</h5>
-                {% if qr_code_base64 %}
-                    <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="QR Code für diese Seite" class="qr-code-img">
-                {% else %}
-                    <!-- Fallback to JS-generated QR code if base64 image fails -->
-                    <div id="qr-code-js-container"></div>
-                {% endif %}
-                <p class="text-muted mt-2 small">Direktzugriff auf: <br>http://141.72.12.183:33059/</p>
+            <!-- QR Code Container -->
+            <div class="qr-container animate__animated animate__fadeIn">
+                <div id="qrcode" class="qr-code"></div>
+                <p class="qr-text">{{ site_url }}</p>
             </div>
             
             <div class="row mt-5">
@@ -262,7 +259,18 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Add our custom QR code script -->
-    <script src="/static/qr.js"></script>
+    <script>
+        // Generate QR code on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create QR code for the URL
+            const qrUrl = "{{ site_url }}";
+            const qr = qrcode(0, 'M');
+            qr.addData(qrUrl);
+            qr.make();
+            
+            // Display the QR code
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(5);
+        });
+    </script>
 </body>
 </html> 
