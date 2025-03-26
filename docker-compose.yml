@@ -5,6 +5,8 @@ services:
     build: .
     ports:
       - "8000:8000"
-    volumes:
-      - ./data:/app/data
+    environment:
+      - COURSE_NAME=${COURSE_NAME}
+      - VOTING_STUDENTS=${VOTING_STUDENTS}
+      - CANDIDATES=${CANDIDATES}
     restart: unless-stopped 

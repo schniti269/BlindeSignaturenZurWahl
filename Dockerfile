@@ -5,6 +5,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create data directory for keys.json
+RUN mkdir -p data
+
+# Copy application files
 COPY . .
 
 EXPOSE 8000

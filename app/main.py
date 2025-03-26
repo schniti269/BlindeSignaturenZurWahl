@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
-import csv
 import json
 from pathlib import Path
 from app.utils.crypto import (
@@ -14,6 +13,31 @@ from app.utils.crypto import (
 )
 
 app = FastAPI(title="Blind Signature Voting Demo")
+
+
+# Load and validate configuration from environment variables
+def load_env_var(name, default=None):
+    value = os.getenv(name, default)
+    if value is None:
+        raise ValueError(f"Environment variable {name} is required")
+    return value
+
+
+try:
+    COURSE_NAME = load_env_var("COURSE_NAME")
+    VOTING_STUDENTS = json.loads(load_env_var("VOTING_STUDENTS"))
+    CANDIDATES = json.loads(load_env_var("CANDIDATES"))
+
+    # Validate the loaded data
+    if not isinstance(VOTING_STUDENTS, list):
+        raise ValueError("VOTING_STUDENTS must be a JSON array")
+    if not isinstance(CANDIDATES, list):
+        raise ValueError("CANDIDATES must be a JSON array")
+    if not CANDIDATES:
+        raise ValueError("CANDIDATES cannot be empty")
+except Exception as e:
+    print(f"Error loading configuration: {str(e)}")
+    raise
 
 # Set up static files and templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -33,6 +57,10 @@ if not keys_file.exists():
 with open(keys_file, "r") as f:
     keys = json.load(f)
 
+# In-memory storage
+voted_students = []
+cast_votes = []
+
 # Store for DH session parameters
 dh_sessions = {}
 
@@ -40,17 +68,30 @@ dh_sessions = {}
 # Routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "course_name": COURSE_NAME}
+    )
 
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin(request: Request):
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request,
+            "course_name": COURSE_NAME,
+            "voting_students": VOTING_STUDENTS,
+            "candidates": CANDIDATES,
+        },
+    )
 
 
 @app.get("/vote", response_class=HTMLResponse)
 async def vote_page(request: Request):
-    return templates.TemplateResponse("vote.html", {"request": request})
+    return templates.TemplateResponse(
+        "vote.html",
+        {"request": request, "course_name": COURSE_NAME, "candidates": CANDIDATES},
+    )
 
 
 @app.post("/get-public-key")
@@ -85,48 +126,20 @@ async def dh_exchange(request: Request):
 
 @app.post("/sign-ballot")
 async def sign_ballot(request: Request):
+    global voted_students
     data = await request.json()
     student_id = data.get("student_id")
     blinded_ballot = data.get("blinded_ballot")
     client_id = data.get("client_id")
 
     # Check if student is in the list and hasn't voted
-    students = []
-    voted_students = []
+    if student_id not in VOTING_STUDENTS:
+        return JSONResponse(
+            status_code=403, content={"error": "Student not authorized to vote"}
+        )
 
-    # Load student list
-    try:
-        # First try with UTF-8 encoding (most common)
-        try:
-            with open("data/students.csv", "r", encoding="utf-8") as f:
-                students = [line.strip() for line in f.readlines() if line.strip()]
-        except UnicodeDecodeError:
-            # If UTF-8 fails, try with UTF-16
-            with open("data/students.csv", "r", encoding="utf-16") as f:
-                students = [line.strip() for line in f.readlines() if line.strip()]
-
-        # Clean up any remaining null characters or BOM markers
-        students = [s.replace("\x00", "").replace("\ufeff", "") for s in students if s]
-        students = [s for s in students if s]  # Remove any empty strings after cleaning
-    except FileNotFoundError:
-        # Create sample file if doesn't exist
-        with open("data/students.csv", "w", encoding="utf-8") as f:
-            f.write("student1\nstudent2\nstudent3\nstudent4\nstudent5")
-        students = ["student1", "student2", "student3", "student4", "student5"]
-
-    # Load voted students
-    try:
-        with open("data/voted.csv", "r", encoding="utf-8") as f:
-            voted_students = [line.strip() for line in f.readlines() if line.strip()]
-    except FileNotFoundError:
-        # Create file if doesn't exist
-        with open("data/voted.csv", "w", encoding="utf-8") as f:
-            pass
-
-    # For student verification
-    if student_id not in students:
-        return JSONResponse(status_code=403, content={"error": "Student not in list"})
-    elif student_id in voted_students:
+    # Check if student has already voted
+    if student_id in voted_students:
         return JSONResponse(
             status_code=403, content={"error": "Student has already voted"}
         )
@@ -143,14 +156,14 @@ async def sign_ballot(request: Request):
     blind_signature = sign_blinded_message(blinded_ballot_int, keys["private_key"])
 
     # Mark student as voted
-    with open("data/voted.csv", "a") as f:
-        f.write(f"{student_id}\n")
+    voted_students.append(student_id)
 
     return {"blind_signature": str(blind_signature)}
 
 
 @app.post("/submit-vote")
 async def submit_vote(request: Request):
+    global cast_votes
     data = await request.json()
     vote = data.get("vote")
     signature = data.get("signature")
@@ -176,14 +189,6 @@ async def submit_vote(request: Request):
     if not verify_signature(vote_int, signature_int, keys["public_key"]):
         return JSONResponse(status_code=403, content={"error": "Invalid signature"})
 
-    # Check if this ballot has been cast before
-    cast_votes = []
-    try:
-        with open("data/votes.json", "r") as f:
-            cast_votes = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        cast_votes = []
-
     # Check if this exact vote has been cast before
     for cast_vote in cast_votes:
         if cast_vote["signature"] == signature:
@@ -192,49 +197,25 @@ async def submit_vote(request: Request):
     # Use the provided candidate name instead of mapping
     candidate_name = candidate
 
-    # Store vote
+    # Store vote in memory
     cast_votes.append({"vote": candidate_name, "signature": signature})
-    with open("data/votes.json", "w") as f:
-        json.dump(cast_votes, f)
 
     return {"success": True}
 
 
 @app.get("/results")
 async def get_results():
+    global cast_votes
+
     # Count votes
     votes = {}
-    try:
-        with open("data/votes.json", "r") as f:
-            cast_votes = json.load(f)
-
-        for vote_data in cast_votes:
-            vote = vote_data["vote"]
-            votes[vote] = votes.get(vote, 0) + 1
-    except (FileNotFoundError, json.JSONDecodeError):
-        votes = {}
+    for vote_data in cast_votes:
+        vote = vote_data["vote"]
+        votes[vote] = votes.get(vote, 0) + 1
 
     # Get participation
-    students_count = 0
-    voted_count = 0
-
-    try:
-        # First try with UTF-8 encoding (most common)
-        try:
-            with open("data/students.csv", "r", encoding="utf-8") as f:
-                students_count = sum(1 for line in f if line.strip())
-        except UnicodeDecodeError:
-            # If UTF-8 fails, try with UTF-16
-            with open("data/students.csv", "r", encoding="utf-16") as f:
-                students_count = sum(1 for line in f if line.strip())
-    except FileNotFoundError:
-        students_count = 0
-
-    try:
-        with open("data/voted.csv", "r", encoding="utf-8") as f:
-            voted_count = sum(1 for line in f if line.strip())
-    except FileNotFoundError:
-        voted_count = 0
+    students_count = len(VOTING_STUDENTS)
+    voted_count = len(voted_students)
 
     # Calculate participation percentage, ensure it's a number
     participation = (voted_count / students_count) * 100 if students_count > 0 else 0
@@ -250,28 +231,7 @@ async def get_results():
 @app.get("/voted-students")
 async def get_voted_students():
     """Return a list of students who have voted"""
-    voted_students = []
-
-    try:
-        # Try with UTF-8 encoding first
-        try:
-            with open("data/voted.csv", "r", encoding="utf-8") as f:
-                voted_students = [
-                    line.strip() for line in f.readlines() if line.strip()
-                ]
-        except UnicodeDecodeError:
-            # If UTF-8 fails, try with UTF-16
-            with open("data/voted.csv", "r", encoding="utf-16") as f:
-                voted_students = [
-                    line.strip() for line in f.readlines() if line.strip()
-                ]
-
-        # Clean up any BOM markers or null characters
-        voted_students = [
-            s.replace("\x00", "").replace("\ufeff", "") for s in voted_students if s
-        ]
-    except FileNotFoundError:
-        voted_students = []
+    global voted_students
 
     return {"voted_students": voted_students}
 

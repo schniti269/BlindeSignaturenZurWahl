@@ -68,9 +68,9 @@
                         <div class="mb-3">
                             <select class="form-select" id="ballot-choice">
                                 <option value="" selected disabled>Bitte wählen...</option>
-                                <option value="Kandidat A">Kandidat A</option>
-                                <option value="Kandidat B">Kandidat B</option>
-                                <option value="Kandidat C">Kandidat C</option>
+                                {% for candidate in candidates %}
+                                <option value="{{ candidate }}">{{ candidate }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="mb-3">
