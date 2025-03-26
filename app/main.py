@@ -20,6 +20,7 @@ import qrcode
 import io
 import base64
 from PIL import Image
+from app.static.qr_generator import generate_qr_code
 
 app = FastAPI(title="Blind Signature Voting Demo")
 
@@ -82,12 +83,21 @@ dh_sessions = {}
 # Routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    # Generate QR code for the site URL using a web-based QR code service instead
-    qr_img_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://141.72.12.183:33059/"
+    # Generate QR code locally using our dedicated function
+    site_url = "http://141.72.12.183:33059/"
+    qr_code_base64 = generate_qr_code(site_url, box_size=8, border=4)
+
+    print(f"QR code generation status: {'Success' if qr_code_base64 else 'Failed'}")
+    if qr_code_base64:
+        print(f"QR code length: {len(qr_code_base64)} chars")
 
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "course_name": COURSE_NAME, "qr_img_url": qr_img_url},
+        {
+            "request": request,
+            "course_name": COURSE_NAME,
+            "qr_code_base64": qr_code_base64,
+        },
     )
 
 
