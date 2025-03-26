@@ -1,6 +1,64 @@
 # Blinde Signaturen zur Wahl - Demo
 
-Dieses Projekt demonstriert die Verwendung von blinden Signaturen basierend auf dem Diffie-Hellman-Schlüsselaustausch, speziell für die Anwendung in einem Wahlsystem.
+Ein Demonstrationsprojekt für Blind Signatures (blinde Signaturen) in einem elektronischen Wahlsystem.
+
+## Einrichtung und Konfiguration
+
+### Methode 1: Mit Python direkt
+
+* Python 3.9+ installieren
+* Repository klonen: `git clone https://github.com/username/BlindeSignaturenZurWahlDEMO.git`
+* Abhängigkeiten installieren: `pip install -r requirements.txt`
+* `.env`-Datei konfigurieren (siehe unten)
+* Anwendung starten: `python run.py`
+* Browser öffnen: http://localhost:8000
+
+### Methode 2: Mit Docker
+
+* Docker installieren
+* Repository klonen: `git clone https://github.com/username/BlindeSignaturenZurWahlDEMO.git`
+* `.env`-Datei konfigurieren (siehe unten)
+* Container starten: `docker-compose up -d`
+* Browser öffnen: http://localhost:8000
+
+### Methode 3: Mit Docker-Image
+
+* Docker installieren
+* Container direkt starten:
+```
+docker run -e COURSE_NAME="Kursname" -e VOTING_STUDENTS="Student1,Student2,Student3" -e CANDIDATES="Kandidat1,Kandidat2" -p 8000:8000 ianschn/blindewahl:latest
+```
+
+## Konfiguration mit .env
+
+Die Anwendung verwendet eine `.env`-Datei für Umgebungsvariablen:
+
+```
+COURSE_NAME="DHBW WWI22SEA"
+VOTING_STUDENTS="valentin,ian,jared,samuel,svenja,marian,monika"
+CANDIDATES="valentin,joel"
+```
+
+### Parameter
+
+* `COURSE_NAME`: Name des Kurses/der Veranstaltung (wird auf der Webseite angezeigt)
+* `VOTING_STUDENTS`: Komma-getrennte Liste aller wahlberechtigten Personen (ohne Leerzeichen zwischen Kommas)
+* `CANDIDATES`: Komma-getrennte Liste aller Kandidaten (ohne Leerzeichen zwischen Kommas)
+
+## Fehlerbehebung
+
+* **Port bereits belegt**: Wenn der Port 8000 bereits verwendet wird, ändern Sie den Port in `docker-compose.yml` oder verwenden Sie im Docker-Run-Befehl `-p 8001:8000`
+* **Daten persistieren**: Um die Schlüssel zwischen Neustarts zu erhalten, mounten Sie das data-Verzeichnis: `-v ./data:/app/data`
+
+## Systemübersicht
+
+1. **Wahlleiter** (Admin-Ansicht): Überwacht den Wahlprozess
+2. **Wähler**: Authentifizieren sich, erhalten eine blinde Signatur und geben ihre Stimme ab
+3. **Ergebnis-Anzeige**: Zeigt das Wahlergebnis in Echtzeit an
+
+## Hinweis
+
+Dieses Projekt ist nur eine Demonstration und nicht für den Einsatz in realen Wahlszenarien geeignet.
 
 ## Warnung
 

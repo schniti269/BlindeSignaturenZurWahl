@@ -8,64 +8,278 @@
     <script src="https://unpkg.com/htmx.org@1.9.5"></script>
     <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #f72585;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --winner-bg: rgba(76, 201, 240, 0.15);
+        }
+        
         body {
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%);
             padding-top: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        .dashboard-header {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+        
         .card {
-            margin-bottom: 1rem;
-            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border-radius: 15px;
+            border: none;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 2px solid #f3f4f6;
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header i {
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
         .result-card {
             transition: all 0.3s ease;
         }
+        
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 350px;
             margin-top: 20px;
         }
+        
         .voters-list {
             max-height: 300px;
             overflow-y: auto;
+            border-radius: 10px;
+            background-color: var(--light-bg);
+            padding: 0.5rem;
         }
-        /* Make progress bar more visible */
+        
+        .voters-list .list-group-item {
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .voters-list .list-group-item:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+            transform: translateX(5px);
+        }
+        
+        /* Styled progress bar */
         .progress {
-            height: 25px;
+            height: 30px;
             background-color: #e9ecef;
-            border-radius: 0.25rem;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
         }
+        
         .progress-bar {
-            background-color: #007bff;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--success-color) 100%);
             color: white;
             font-weight: bold;
             font-size: 14px;
-            line-height: 25px;
+            line-height: 30px;
+            box-shadow: 0 0 10px rgba(67, 97, 238, 0.5);
         }
-        /* Add highlight effect for winning candidate */
+        
+        /* Highlight effect for winning candidate */
         .winner {
-            background-color: rgba(40, 167, 69, 0.15);
+            background-color: var(--winner-bg);
+            border-left: 4px solid var(--success-color);
             font-weight: bold;
+        }
+        
+        /* Style buttons */
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.35);
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 10px;
+            padding: 0.6rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-outline-secondary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* Real-time indicator */
+        .real-time-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #4cc9f0;
+            border-radius: 50%;
+            margin-right: 6px;
+            position: relative;
+        }
+        
+        .real-time-indicator::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #4cc9f0;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            z-index: -1;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+        
+        /* Security features styling */
+        .security-item {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            background-color: white;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s;
+        }
+        
+        .security-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Stats counters */
+        .stat-counter {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-counter .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-counter .label {
+            color: #6c757d;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Admin Dashboard</h1>
-            <a href="/" class="btn btn-outline-secondary">Zurück zur Startseite</a>
+        <div class="dashboard-header d-flex justify-content-between align-items-center animate__animated animate__fadeIn">
+            <div>
+                <h1 class="mb-0"><i class="fas fa-chart-line me-2" style="color: var(--primary-color);"></i>Admin Dashboard</h1>
+                <p class="text-muted mb-0">Echtzeit-Überwachung des Wahlsystems</p>
+            </div>
+            <div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="real-time-indicator"></div>
+                    <span class="text-muted small">Live-Daten</span>
+                </div>
+                <a href="/" class="btn btn-outline-secondary"><i class="fas fa-home me-2"></i>Zurück zur Startseite</a>
+            </div>
         </div>
         
         <div class="row">
-            <div class="col-md-6">
+            <!-- Stats summary row -->
+            <div class="col-12 mb-4 animate__animated animate__fadeInUp">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="stat-counter" id="total-voters-stat">
+                            <i class="fas fa-users fa-2x mb-3" style="color: var(--primary-color);"></i>
+                            <div class="value" id="total-students-count">-</div>
+                            <div class="label">Gesamtstudenten</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-counter" id="voted-stat">
+                            <i class="fas fa-vote-yea fa-2x mb-3" style="color: var(--accent-color);"></i>
+                            <div class="value" id="voted-students-count">-</div>
+                            <div class="label">Abgestimmte Studenten</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-counter" id="participation-stat">
+                            <i class="fas fa-percentage fa-2x mb-3" style="color: var(--success-color);"></i>
+                            <div class="value" id="participation-percentage">-</div>
+                            <div class="label">Wahlbeteiligung</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 animate__animated animate__fadeInLeft">
                 <div class="card">
                     <div class="card-header">
-                        Wahlbeteiligung
+                        <i class="fas fa-chart-pie"></i>Wahlbeteiligung
                     </div>
                     <div class="card-body">
                         <p>Hier kannst du die aktuelle Wahlbeteiligung einsehen.</p>
                         <button class="btn btn-primary" hx-get="/results" hx-target="#participation-results" hx-trigger="click">
-                            Wahlbeteiligung berechnen
+                            <i class="fas fa-sync-alt me-2"></i>Wahlbeteiligung berechnen
                         </button>
                         <div id="participation-results" class="mt-3">
                             <!-- HTMX will insert results here -->
@@ -76,12 +290,12 @@
                 <!-- Who has voted card -->
                 <div class="card mt-3">
                     <div class="card-header">
-                        Wer hat abgestimmt?
+                        <i class="fas fa-user-check"></i>Wer hat abgestimmt?
                     </div>
                     <div class="card-body">
                         <p>Liste der Studenten, die bereits abgestimmt haben.</p>
                         <button class="btn btn-primary" id="load-voted-students">
-                            Abstimmungsliste anzeigen
+                            <i class="fas fa-list me-2"></i>Abstimmungsliste anzeigen
                         </button>
                         <div class="voters-list mt-3">
                             <ul id="voted-students-list" class="list-group">
@@ -91,15 +305,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 animate__animated animate__fadeInRight">
                 <div class="card">
                     <div class="card-header">
-                        Wahlergebnisse
+                        <i class="fas fa-poll"></i>Wahlergebnisse
                     </div>
                     <div class="card-body">
                         <p>Hier kannst du die aktuellen Stimmen zählen.</p>
                         <button class="btn btn-primary" hx-get="/results" hx-target="#voting-results" hx-trigger="click">
-                            Stimmen auszählen
+                            <i class="fas fa-calculator me-2"></i>Stimmen auszählen
                         </button>
                         <div id="voting-results" class="mt-3">
                             <!-- HTMX will insert results here -->
@@ -112,24 +326,41 @@
             </div>
         </div>
         
-        <div class="row mt-4">
+        <div class="row mt-4 animate__animated animate__fadeInUp">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        Sicherheit des Wahlsystems
+                        <i class="fas fa-shield-alt"></i>Sicherheit des Wahlsystems
                     </div>
                     <div class="card-body">
                         <h5>Diese Demo verwendet blinde Signaturen, um folgende Eigenschaften zu gewährleisten:</h5>
-                        <ul>
-                            <li><strong>Anonymität:</strong> Die Wahlbehörde kann den Inhalt der Stimmzettel nicht sehen, wenn sie diese signiert.</li>
-                            <li><strong>Integrität:</strong> Nur Stimmzettel mit gültiger Signatur werden gezählt.</li>
-                            <li><strong>Einmaligkeit:</strong> Jeder Wähler kann nur einmal abstimmen.</li>
-                            <li><strong>Überprüfbarkeit:</strong> Die Signaturen können verifiziert werden, ohne die Anonymität zu verletzen.</li>
-                        </ul>
-                        <p>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="security-item">
+                                    <h5><i class="fas fa-user-secret me-2" style="color: var(--primary-color);"></i>Anonymität</h5>
+                                    <p>Die Wahlbehörde kann den Inhalt der Stimmzettel nicht sehen, wenn sie diese signiert.</p>
+                                </div>
+                                <div class="security-item">
+                                    <h5><i class="fas fa-lock me-2" style="color: var(--primary-color);"></i>Integrität</h5>
+                                    <p>Nur Stimmzettel mit gültiger Signatur werden gezählt.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="security-item">
+                                    <h5><i class="fas fa-check-double me-2" style="color: var(--primary-color);"></i>Einmaligkeit</h5>
+                                    <p>Jeder Wähler kann nur einmal abstimmen.</p>
+                                </div>
+                                <div class="security-item">
+                                    <h5><i class="fas fa-search me-2" style="color: var(--primary-color);"></i>Überprüfbarkeit</h5>
+                                    <p>Die Signaturen können verifiziert werden, ohne die Anonymität zu verletzen.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
                             Die Signaturen werden mit RSA erstellt, einem asymmetrischen Kryptosystem. Der Blinding-Mechanismus 
                             stellt sicher, dass die Wahlbehörde den Inhalt des Stimmzettels nicht kennt, wenn sie ihn signiert.
-                        </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -141,26 +372,30 @@
     
     <!-- Templates for HTMX responses -->
     <script id="participation-template" type="text/template">
-        <div class="card result-card">
+        <div class="card result-card animate__animated animate__fadeIn">
             <div class="card-body">
-                <h5 class="card-title">Wahlbeteiligung</h5>
+                <h5 class="card-title"><i class="fas fa-chart-pie me-2" style="color: var(--primary-color);"></i>Wahlbeteiligung</h5>
                 <div class="progress mb-3">
                     <div class="progress-bar" role="progressbar" aria-valuenow="{{participation}}" aria-valuemin="0" aria-valuemax="100" style="width: {{participation}}%">{{participation}}%</div>
                 </div>
                 <p class="mb-2"><strong>{{voted_students}}</strong> von <strong>{{total_students}}</strong> Studenten haben abgestimmt.</p>
-                <div class="text-muted small">Letzte Aktualisierung: <span id="last-update-time">{{currentTime}}</span></div>
+                <div class="text-muted small d-flex align-items-center">
+                    <i class="fas fa-clock me-1"></i> Letzte Aktualisierung: <span id="last-update-time">{{currentTime}}</span>
+                </div>
             </div>
         </div>
     </script>
     
     <script id="results-template" type="text/template">
-        <div class="card result-card">
+        <div class="card result-card animate__animated animate__fadeIn">
             <div class="card-body">
-                <h5 class="card-title">Wahlergebnisse</h5>
+                <h5 class="card-title"><i class="fas fa-poll me-2" style="color: var(--primary-color);"></i>Wahlergebnisse</h5>
                 <ul class="list-group">
                     {{votesList}}
                 </ul>
-                <div class="text-muted small mt-2">Letzte Aktualisierung: <span id="results-update-time">{{currentTime}}</span></div>
+                <div class="text-muted small d-flex align-items-center mt-2">
+                    <i class="fas fa-clock me-1"></i> Letzte Aktualisierung: <span id="results-update-time">{{currentTime}}</span>
+                </div>
             </div>
         </div>
     </script>
