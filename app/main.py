@@ -82,24 +82,12 @@ dh_sessions = {}
 # Routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    # Generate QR code for the site URL
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data("http://141.72.12.183:33059/")
-    qr.make(fit=True)
-
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-    qr_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    # Generate QR code for the site URL using a web-based QR code service instead
+    qr_img_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://141.72.12.183:33059/"
 
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "course_name": COURSE_NAME, "qr_code": qr_img},
+        {"request": request, "course_name": COURSE_NAME, "qr_img_url": qr_img_url},
     )
 
 
