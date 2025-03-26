@@ -25,14 +25,19 @@ def load_env_var(name, default=None):
 
 try:
     COURSE_NAME = load_env_var("COURSE_NAME")
-    VOTING_STUDENTS = json.loads(load_env_var("VOTING_STUDENTS"))
-    CANDIDATES = json.loads(load_env_var("CANDIDATES"))
+
+    # Parse comma-separated strings into lists
+    voting_students_str = load_env_var("VOTING_STUDENTS")
+    VOTING_STUDENTS = [s.strip() for s in voting_students_str.split(",")]
+
+    candidates_str = load_env_var("CANDIDATES")
+    CANDIDATES = [s.strip() for s in candidates_str.split(",")]
 
     # Validate the loaded data
     if not isinstance(VOTING_STUDENTS, list):
-        raise ValueError("VOTING_STUDENTS must be a JSON array")
+        raise ValueError("VOTING_STUDENTS must be a list")
     if not isinstance(CANDIDATES, list):
-        raise ValueError("CANDIDATES must be a JSON array")
+        raise ValueError("CANDIDATES must be a list")
     if not CANDIDATES:
         raise ValueError("CANDIDATES cannot be empty")
 except Exception as e:

@@ -127,7 +127,7 @@ function setupEventListeners() {
         studentId = document.getElementById('student-id').value.trim();
         
         if (!studentId) {
-            alert('Bitte gib deine Matrikelnummer ein.');
+            alert('Bitte gib deine Vorname ein.');
             return;
         }
         
