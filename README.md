@@ -19,16 +19,21 @@ Dieses Projekt demonstriert die Verwendung von blinden Signaturen für sichere u
 ## 🖼️ Screenshots
 
 ### Nutzeroberfläche
-<img width="996" alt="Nutzeroberfläche" src="https://github.com/user-attachments/assets/a9f2226b-a8e5-4b46-8340-0a94e8859c6e">
+<img width="257" alt="image" src="https://github.com/user-attachments/assets/1573ef5e-20b2-4936-8c47-14be3746ba62" />
+
 
 ### Schritt-für-Schritt-Prozessvisualisierung
-<img width="679" alt="Prozessvisualisierung" src="https://github.com/user-attachments/assets/98b52289-0a41-45f1-9e27-34813420ac74">
+<img width="1029" alt="image" src="https://github.com/user-attachments/assets/0acccc77-b4e1-40df-812a-92c7ca3e1d14" />
+
+
 
 ### Wahlleiter-Dashboard mit Live-Ergebnissen
-<img width="1046" alt="Wahlleiter-Dashboard" src="https://github.com/user-attachments/assets/a902d074-eb00-47c2-b60f-47107c53b433">
+<img width="416" alt="image" src="https://github.com/user-attachments/assets/08cba942-b2a3-4934-bbb9-070ddfee060a" />
+
 
 ### Eigenschaften des Wahlsystems
-<img width="998" alt="Eigenschaften" src="https://github.com/user-attachments/assets/e9e535a7-3caa-42c4-9415-520500914ae3">
+<img width="407" alt="image" src="https://github.com/user-attachments/assets/23dba158-0abb-4c9b-9091-6360956ecde0" />
+
 
 ## 🚀 Einrichtung und Konfiguration
 
