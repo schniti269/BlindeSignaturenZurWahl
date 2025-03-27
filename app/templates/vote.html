@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Add animate.css for animations -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Add MathJax for displaying math formulas -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -375,6 +378,16 @@
                     </div>
                     <div class="card-body">
                         <p>Blende deinen Stimmzettel mit einem zufälligen Faktor, bevor du ihn zur Wahlbehörde sendest.</p>
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-key me-2"></i><strong>Wichtig zu verstehen:</strong> Der Blinding-Prozess versteckt deinen Stimmzettel, ähnlich wie wenn du ihn in einen undurchsichtigen Umschlag stecken würdest. Die Wahlbehörde kann nicht sehen, für wen du stimmst, aber trotzdem bestätigen, dass du wahlberechtigt bist.
+                        </div>
+                        <div class="alert alert-secondary mb-3">
+                            <i class="fas fa-calculator me-2"></i><strong>Mathematische Formel:</strong>
+                            <div class="text-center">
+                                \[ M' = M \cdot g^r \mod p \]
+                            </div>
+                            <p class="small mb-0">Wobei \(M\) deine Stimme ist (als Zahl), \(r\) der zufällige Blinding-Faktor, \(g\) der Generator und \(p\) ein großer Primzahlmodul.</p>
+                        </div>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
@@ -409,6 +422,16 @@
                     </div>
                     <div class="card-body">
                         <p>Sende deinen geblendeten Stimmzettel zur Wahlbehörde zur Signierung.</p>
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-shield-alt me-2"></i><strong>Mathematischer Schutz:</strong> Die Wahlbehörde signiert deine verdeckte Stimme ohne den Inhalt zu kennen. Diese Signatur funktioniert wie ein Echtheitszertifikat, das später überprüft werden kann, ohne dass deine Identität preisgegeben wird. Dieser Prozess basiert auf komplexen kryptographischen Eigenschaften der Diffie-Hellman-Verschlüsselung.
+                        </div>
+                        <div class="alert alert-secondary mb-3">
+                            <i class="fas fa-calculator me-2"></i><strong>Mathematische Formel:</strong>
+                            <div class="text-center">
+                                \[ S' = (M')^x \mod p \]
+                            </div>
+                            <p class="small mb-0">Die Wahlbehörde berechnet die Signatur \(S'\), indem sie den geblendeten Stimmzettel \(M'\) mit ihrem privaten Schlüssel \(x\) potenziert.</p>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label"><i class="fas fa-file-alt me-2" style="color: var(--primary-color);"></i>Geblendeter Stimmzettel:</label>
                             <pre id="blinded-ballot-to-auth"></pre>
@@ -430,6 +453,17 @@
                     </div>
                     <div class="card-body">
                         <p>Entferne den Blinding-Faktor von der Signatur, um eine gültige Signatur für deinen Stimmzettel zu erhalten.</p>
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-magic me-2"></i><strong>Mathematisches "Wunder":</strong> Durch das Entfernen des Blinding-Faktors erhältst du eine vollständig gültige Signatur für deinen ursprünglichen Stimmzettel. Die Wahlbehörde kann später verifizieren, dass sie diese Signatur erstellt hat, weiß aber nicht, für wen und wann genau sie signiert hat.
+                        </div>
+                        <div class="alert alert-secondary mb-3">
+                            <i class="fas fa-calculator me-2"></i><strong>Mathematische Formel:</strong>
+                            <div class="text-center">
+                                \[ S = S' \cdot y^{-r} \mod p \]
+                            </div>
+                            <p class="small mb-0">Du berechnest die entblendete Signatur \(S\), indem du die blinde Signatur \(S'\) mit dem inversen Wert von \(y^r\) multiplizierst, wobei \(y = g^x\) der öffentliche Schlüssel der Wahlbehörde ist.</p>
+                            <p class="small mb-0 mt-1">Das Ergebnis ist \(S = M^x \mod p\), eine gültige Signatur für deine ursprüngliche Stimme!</p>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label"><i class="fas fa-signature me-2" style="color: var(--primary-color);"></i>Blinde Signatur:</label>
                             <pre id="blind-sig-to-unblind"></pre>
@@ -449,7 +483,18 @@
                         <i class="fas fa-paper-plane"></i>Schritt 6: Stimmabgabe
                     </div>
                     <div class="card-body">
-                        <p>Gib deinen Stimmzettel anonym ab. Die Wahlbehörde kann die Gültigkeit deiner Stimme überprüfen, ohne zu wissen, wer du bist.</p>
+                        <p>Gib deinen geblendeten Stimmzettel anonym ab. Die Wahlbehörde kann die Gültigkeit deiner Stimme überprüfen, ohne zu wissen, wer du bist.</p>
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-user-secret me-2"></i><strong>Maximale Anonymität:</strong> Deine Stimmabgabe ist komplett anonym und kann nicht zu dir zurückverfolgt werden. Du kannst diesen Prozess von jedem Gerät und jeder IP-Adresse durchführen, auch über TOR oder VPN, ohne dass die Verifizierung beeinträchtigt wird.
+                        </div>
+                        <div class="alert alert-secondary mb-3">
+                            <i class="fas fa-calculator me-2"></i><strong>Verifizierungsformel:</strong>
+                            <div class="text-center">
+                                \[ g^M \stackrel{?}{=} y^S \mod p \]
+                            </div>
+                            <p class="small mb-0">Die Wahlbehörde überprüft die Gültigkeit deiner Stimme und Signatur, indem sie prüft, ob \(g^M = y^S \mod p\). Dies funktioniert, weil \(y^S = (g^x)^S = g^{x \cdot S} = g^{x \cdot M^x} = g^M\).</p>
+                            <p class="small mb-0 mt-1">Deine Stimme wird nur akzeptiert, wenn die Gleichung stimmt!</p>
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">

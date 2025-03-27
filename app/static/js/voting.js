@@ -1,9 +1,9 @@
 // Global variables to store state
 let publicKey = null;
-let dhParams = null;
-let sharedKey = null;
-let blindedBallot = null;
+let blindingFactor = null;
 let originalBallot = null;
+let blindedBallot = null;
+let rawMessage = null;
 let blindSignature = null;
 let unblindedSignature = null;
 let studentId = null;
@@ -107,6 +107,29 @@ function modPow(base, exponent, modulus) {
     return result;
 }
 
+// Hash a message using SHA-256 and convert to a BigInt
+async function hashMessage(message, p) {
+    // Convert message to string if not already
+    if (typeof message !== 'string') {
+        message = String(message);
+    }
+    
+    // Hash the message with SHA-256
+    const msgUint8 = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    
+    // Convert to byte array
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    
+    // Convert to hex string
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // Convert to BigInt and ensure it's in range [1, p-1]
+    const hashInt = BigInt('0x' + hashHex) % (BigInt(p) - 1n) + 1n;
+    
+    return hashInt;
+}
+
 // Generate a random client ID
 function generateClientId() {
     return 'client_' + Math.random().toString(36).substring(2, 15);
@@ -139,10 +162,13 @@ function setupEventListeners() {
     document.getElementById('ballot-choice').addEventListener('change', function() {
         const choice = this.value;
         if (choice) {
-            // Speichere sowohl den Originaltext als auch den numerischen Wert
+            // Save both the original text and the numeric value
             originalText = choice;
             
-            // Convert choice to an integer for cryptographic operations
+            // Save the raw message for later
+            rawMessage = choice;
+            
+            // Store ballot as integer representation
             originalBallot = stringToInt(choice).toString();
             document.getElementById('raw-ballot').value = originalBallot;
         }
@@ -173,65 +199,36 @@ function setupEventListeners() {
         });
     });
     
-    // Step 3: Generate DH parameters and blind the ballot
-    document.getElementById('btn-step3').addEventListener('click', function() {
+    // Step 3: Generate blinding factor and blind the ballot
+    document.getElementById('btn-step3').addEventListener('click', async function() {
         try {
-            // Generate DH parameters
+            // Get parameters from public key
             const p = BigInt(publicKey.p);
             const g = BigInt(publicKey.g);
             
-            // Generate random 'a' for DH
-            const a = BigInt(Math.floor(Math.random() * 1000) + 100);
+            // Generate random 'r' for blinding
+            blindingFactor = BigInt(Math.floor(Math.random() * 1000) + 100);
             
-            // Calculate A = g^a mod p
-            const A = modPow(g, a, p);
+            document.getElementById('blinding-factor').textContent = "Blinding factor r: " + blindingFactor.toString();
             
-            dhParams = {
-                a: a,
-                A: A
-            };
+            // Hash the message to an integer
+            const messageHash = await hashMessage(rawMessage, p);
             
-            document.getElementById('blinding-factor').textContent = "DH parameter a: " + a.toString();
+            // Compute g^r mod p
+            const g_r = modPow(g, blindingFactor, p);
             
-            // Send A to server and get B
-            fetch('/dh-exchange', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    client_id: clientId,
-                    A: A.toString()
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Calculate shared key K = B^a mod p
-                const B = BigInt(data.B);
-                sharedKey = modPow(B, dhParams.a, p);
-                
-                // Speichere sharedKey explizit als String für spätere Konvertierung
-                sharedKey = sharedKey.toString();
-                
-                // Blind the ballot: M_blind = (M * K) mod p
-                const message = BigInt(originalBallot);
-                const sharedKey_bigint = BigInt(sharedKey);
-                blindedBallot = (message * sharedKey_bigint) % p;
-                
-                // Display the results
-                document.getElementById('blinded-ballot').textContent = 
-                    "B: " + B.toString() + "\n" +
-                    "Shared Key K: " + sharedKey + "\n" +
-                    "Blinded Ballot: " + blindedBallot.toString();
-                
-                // Show next button
-                document.getElementById('btn-step3').style.display = 'none';
-                document.getElementById('btn-step3-next').style.display = 'inline-block';
-            })
-            .catch(error => {
-                console.error('Error in DH exchange:', error);
-                alert('Fehler beim Diffie-Hellman-Schlüsselaustausch.');
-            });
+            // Blind the ballot: M' = M * g^r mod p
+            blindedBallot = (messageHash * g_r) % p;
+            
+            // Display the results
+            document.getElementById('blinded-ballot').textContent = 
+                "Message hash: " + messageHash.toString() + "\n" +
+                "g^r mod p: " + g_r.toString() + "\n" +
+                "Blinded Ballot: " + blindedBallot.toString();
+            
+            // Show next button
+            document.getElementById('btn-step3').style.display = 'none';
+            document.getElementById('btn-step3-next').style.display = 'inline-block';
         } catch (error) {
             console.error('Error blinding ballot:', error);
             alert('Fehler beim Blenden des Stimmzettels: ' + error.message);
@@ -296,23 +293,16 @@ function setupEventListeners() {
             // Unblind the signature
             const p = BigInt(publicKey.p);
             const blindSig = BigInt(blindSignature);
+            const y = BigInt(publicKey.y);
             
-            // Stellen sicher, dass sharedKey ein BigInt ist
-            const sharedKey_bigint = typeof sharedKey === 'bigint' ? sharedKey : BigInt(sharedKey);
+            // Calculate y^r mod p
+            const y_r = modPow(y, blindingFactor, p);
             
-            // Calculate inverse of shared key K^-1 mod p
-            // Note: This is a simplification. In a real implementation, we'd need K^x
-            // Nutze BigInt Literal 2n statt Number 2
-            const K_inv = modPow(sharedKey_bigint, p - 2n, p); // Fermat's little theorem
+            // Calculate modular inverse of y^r
+            const y_r_inv = modInverseBigInt(y_r, p);
             
-            // Debugging-Ausgaben
-            console.log('p:', p);
-            console.log('blindSig:', blindSig);
-            console.log('sharedKey:', sharedKey_bigint);
-            console.log('K_inv:', K_inv);
-            
-            // Unblind: S = S_blind * K^-1 mod p
-            const unblinded = (blindSig * K_inv) % p;
+            // Unblind: S = S' * y^(-r) mod p
+            const unblinded = (blindSig * y_r_inv) % p;
             unblindedSignature = unblinded.toString();
             
             // Display the unblinded signature
@@ -330,7 +320,7 @@ function setupEventListeners() {
     
     document.getElementById('btn-step5-next').addEventListener('click', function() {
         // Move to step 6
-        document.getElementById('final-ballot').textContent = originalBallot;
+        document.getElementById('final-ballot').textContent = rawMessage;
         document.getElementById('final-signature').textContent = unblindedSignature;
         moveToStep(6);
     });
@@ -347,9 +337,9 @@ function setupEventListeners() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                vote: originalBallot,
+                vote: rawMessage,
                 signature: unblindedSignature,
-                candidate: originalText // Sende den lesbaren Kandidatennamen für die Anzeige
+                candidate: originalText // Send the readable candidate name for display
             })
         })
         .then(response => {

@@ -9,7 +9,7 @@ from app.utils.crypto import (
     generate_keys,
     sign_blinded_message,
     verify_signature,
-    generate_server_dh_params,
+    hash_to_int,
 )
 
 app = FastAPI(title="Blind Signature Voting Demo")
@@ -108,7 +108,7 @@ async def get_public_key():
 
 @app.post("/dh-exchange")
 async def dh_exchange(request: Request):
-    """Handle the DH key exchange protocol"""
+    """Legacy DH exchange route - simplified for compatibility"""
     data = await request.json()
     client_id = data.get("client_id")
     client_A = data.get("A")
@@ -117,17 +117,15 @@ async def dh_exchange(request: Request):
         # Convert A to integer
         A_int = int(client_A)
 
-        # Generate server's DH parameters
-        server_params = generate_server_dh_params(A_int, keys["public_key"])
+        # Just return a random B value - not used in the new scheme
+        import random
 
-        # Store server's shared key for this client
-        dh_sessions[client_id] = {"K": server_params["K"]}
+        B = random.randint(100, 1000)
 
-        # Return B to client
-        return {"B": str(server_params["B"])}
+        return {"B": str(B)}
     except (ValueError, TypeError) as e:
         return JSONResponse(
-            status_code=400, content={"error": f"Invalid DH parameters: {str(e)}"}
+            status_code=400, content={"error": f"Invalid parameters: {str(e)}"}
         )
 
 
@@ -174,9 +172,9 @@ async def submit_vote(request: Request):
     data = await request.json()
     vote = data.get("vote")
     signature = data.get("signature")
-    candidate = data.get("candidate", "Unbekannt")  # Kandidatenname für Anzeige
+    candidate = data.get("candidate", "Unbekannt")  # Candidate name for display
 
-    # Convert signature to integer if it's a string
+    # Convert signature to integer
     try:
         signature_int = int(signature)
     except (ValueError, TypeError):
@@ -184,16 +182,8 @@ async def submit_vote(request: Request):
             status_code=400, content={"error": f"Invalid signature format: {signature}"}
         )
 
-    # Convert vote to integer if needed for verification
-    try:
-        vote_int = int(vote)
-    except (ValueError, TypeError):
-        return JSONResponse(
-            status_code=400, content={"error": f"Invalid vote format: {vote}"}
-        )
-
-    # Verify signature
-    if not verify_signature(vote_int, signature_int, keys["public_key"]):
+    # Verify signature using the raw vote message
+    if not verify_signature(vote, signature_int, keys["public_key"]):
         return JSONResponse(status_code=403, content={"error": "Invalid signature"})
 
     # Check if this exact vote has been cast before
@@ -201,7 +191,7 @@ async def submit_vote(request: Request):
         if cast_vote["signature"] == signature:
             return JSONResponse(status_code=403, content={"error": "Vote already cast"})
 
-    # Use the provided candidate name instead of mapping
+    # Use the provided candidate name
     candidate_name = candidate
 
     # Store vote in memory
