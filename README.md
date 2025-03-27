@@ -23,7 +23,7 @@ Dieses Projekt demonstriert die Verwendung von blinden Signaturen für sichere u
 
 
 ### Schritt-für-Schritt-Prozessvisualisierung
-<img width="1029" alt="image" src="https://github.com/user-attachments/assets/0acccc77-b4e1-40df-812a-92c7ca3e1d14" />
+<img width="664" alt="image" src="https://github.com/user-attachments/assets/40e98bbb-b9e4-4fb1-b1cb-20bccd72034e" />
 
 
 
