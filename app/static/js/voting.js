@@ -107,27 +107,40 @@ function modPow(base, exponent, modulus) {
     return result;
 }
 
-// Hash a message using SHA-256 and convert to a BigInt
-async function hashMessage(message, p) {
-    // Convert message to string if not already
-    if (typeof message !== 'string') {
-        message = String(message);
+// Hash a message using a simple but effective method
+function hashMessage(message, p) {
+    try {
+        // Validate inputs
+        if (!message) {
+            throw new Error('Message is required');
+        }
+        if (!p) {
+            throw new Error('Prime modulus p is required');
+        }
+
+        // Convert message to string if not already
+        if (typeof message !== 'string') {
+            message = String(message);
+        }
+        
+        // Convert p to BigInt
+        const pBigInt = BigInt(p);
+        
+        // Simple hash function
+        let hash = 0n;
+        for (let i = 0; i < message.length; i++) {
+            const char = message.charCodeAt(i);
+            hash = (hash * 31n + BigInt(char)) % pBigInt;
+        }
+        
+        // Ensure the hash is in range [1, p-1]
+        if (hash === 0n) hash = 1n;
+        
+        return hash;
+    } catch (error) {
+        console.error('Error in hashMessage:', error);
+        throw error;
     }
-    
-    // Hash the message with SHA-256
-    const msgUint8 = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-    
-    // Convert to byte array
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    
-    // Convert to hex string
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    // Convert to BigInt and ensure it's in range [1, p-1]
-    const hashInt = BigInt('0x' + hashHex) % (BigInt(p) - 1n) + 1n;
-    
-    return hashInt;
 }
 
 // Generate a random client ID
@@ -187,24 +200,43 @@ function setupEventListeners() {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data.public_key || !data.public_key.p || !data.public_key.g) {
+                throw new Error('Invalid public key format received from server');
+            }
             publicKey = data.public_key;
+            console.log('Received public key:', publicKey); // Debug log
             document.getElementById('auth-public-key').textContent = JSON.stringify(publicKey, null, 2);
             moveToStep(3);
         })
         .catch(error => {
             console.error('Error fetching public key:', error);
-            alert('Fehler beim Abrufen des Public Keys.');
+            alert('Fehler beim Abrufen des Public Keys: ' + error.message);
         });
     });
     
     // Step 3: Generate blinding factor and blind the ballot
-    document.getElementById('btn-step3').addEventListener('click', async function() {
+    document.getElementById('btn-step3').addEventListener('click', function() {
         try {
+            // Validate public key
+            if (!publicKey || !publicKey.p || !publicKey.g) {
+                throw new Error('Public key not properly initialized');
+            }
+
             // Get parameters from public key
             const p = BigInt(publicKey.p);
             const g = BigInt(publicKey.g);
+            
+            // Validate rawMessage
+            if (!rawMessage) {
+                throw new Error('No message selected');
+            }
             
             // Generate random 'r' for blinding
             blindingFactor = BigInt(Math.floor(Math.random() * 1000) + 100);
@@ -212,7 +244,7 @@ function setupEventListeners() {
             document.getElementById('blinding-factor').textContent = "Blinding factor r: " + blindingFactor.toString();
             
             // Hash the message to an integer
-            const messageHash = await hashMessage(rawMessage, p);
+            const messageHash = hashMessage(rawMessage, p);
             
             // Compute g^r mod p
             const g_r = modPow(g, blindingFactor, p);
